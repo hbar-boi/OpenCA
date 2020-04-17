@@ -56,6 +56,8 @@ class Render {
         return verticals[0].length/2+a
       }));
 
+    this.gridElements = gridIndex.length;
+
     this.gridIndexBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.gridIndexBuffer);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(gridIndex), gl.STATIC_DRAW);
@@ -67,6 +69,7 @@ class Render {
     gl.clearDepth(1.0);
     gl.enable(gl.DEPTH_TEST); // Do depth testing
     gl.depthFunc(gl.LEQUAL);
+    gl.enable(gl.LINE)
 
     let meta = this.shader.meta;
 
@@ -101,7 +104,7 @@ class Render {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindBuffer(gl.ARRAY_BUFFER, this.gridBuffer);
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.gridIndexBuffer);
-    gl.drawElements(gl.TRIANGLES, 490, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, this.gridElements, gl.UNSIGNED_SHORT, 0);
   }
 
 }

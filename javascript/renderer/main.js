@@ -4,8 +4,8 @@ function main() {
 
   map = {
     size: {
-      x: 50,
-      y: 40,
+      x: 5,
+      y: 6,
       thickness: 0.001
     }
   };
