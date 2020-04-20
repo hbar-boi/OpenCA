@@ -1,5 +1,6 @@
 import * as renderer from "./modules/renderer.mjs";
 import {vec2, vec3} from "./modules/vectors.mjs";
+import * as engine from "./modules/engine.mjs";
 
 const map = {
   grid: {
@@ -18,32 +19,45 @@ const map = {
     hover: undefined,
     focus: undefined
   },
+  states: [],
   data: []
 }
 
-const canvas = document.getElementById("frame");
-const ctx = canvas.getContext("2d");
+const canvas = $("#frame");
+const ctx = canvas[0].getContext("2d");
 
-const displayGrid = document.getElementById("grid-display");
+const displayGrid = $("#grid-display");
 
 function main() {
-  ["click", "mousemove", "mouseout"].forEach(function(type) {
-    canvas.addEventListener(type, function(event) {
-      edit(event)
-    })
+  canvas.on("mousemove mouseout", function(event) {
+    cellHover(event)
   });
 
-  document.getElementById("update-grid").addEventListener("click", update);
-  document.getElementById("grid-display").addEventListener("click", update);
+  canvas.click(function(event) {
+    cellClick(event)
+  });
+
+  $("#update-grid").click(update);
+  $("#grid-display").click(update);
+
+  $("#submit-state").click(state);
 
   update();
-
-  canvas.style.visibility = "visible";
 }
 
 function update() { // Update canvas size using grid data
-  let x = document.getElementById("x-size").value;
-  let y = document.getElementById("y-size").value;
+  let x = $("#x-size").val();
+  let y = $("#y-size").val();
+
+  if(x < 1) {
+    $("#x-size").val(1);
+    update();
+    return;
+  } if(y < 1) {
+    $("#y-size").val(1);
+    update();
+    return;
+  }
 
   if(x > y) [x, y] = [y, x]
 
@@ -51,22 +65,26 @@ function update() { // Update canvas size using grid data
   map.grid.y = y;
 
   const ratio = x / y;
-  map.canvas.width = canvas.width = canvas.offsetWidth;
-  map.canvas.height = canvas.height = canvas.offsetWidth * ratio;
+  map.canvas.width = canvas[0].width = Math.round(
+    canvas[0].offsetWidth * window.devicePixelRatio);
+  map.canvas.height = canvas[0].height = Math.round(
+    canvas[0].offsetWidth * ratio * window.devicePixelRatio);
 
-  const rect = canvas.getBoundingClientRect();
+  const rect = canvas[0].getBoundingClientRect();
   map.canvas.top = rect.top;
   map.canvas.left = rect.left;
 
   // Cells gunna take 95% of canvas
-  map.cell.size = (canvas.width * 0.95) / y;
+  map.cell.size = (canvas[0].width * 0.95) / y;
   // The remaining 5% are margins and grid lines
-  map.cell.margin = (canvas.width * 0.05) / (2 * y);
+  map.cell.margin = (canvas[0].width * 0.05) / (2 * y);
+
+  map.cell.hover = undefined;
+  map.cell.focus = undefined;
 
   map.data = [];
   const init = JSON.stringify({
     color: new vec3(255, 255, 255),
-    status: 0
   }); // Fill all cells white
   for(let i = 0; i < x; i++) {
     let col = [];
@@ -75,58 +93,67 @@ function update() { // Update canvas size using grid data
     }
     map.data.push(col);
   }
-
-  renderer.draw(ctx, map, displayGrid.checked);
+  renderer.draw(ctx, map, displayGrid.prop("checked"));
 }
 
-function edit(event) {
+function state() {
+  const submit = $("#submit-state");
+  if(submit.prop("edit")) {
+
+  } else {
+    const state = {
+      name: $("#state-name").val(),
+      color: "rgba(" +
+        $("#state-color-r").val() + ", " +
+        $("#state-color-g").val() + ", " +
+        $("#state-color-b").val() + ", 255)"
+      };
+    map.states.push(state);
+  }
+}
+
+function cellClick(event) {
+  const cell = target(event);
+  const focus = map.cell.focus;
+
+  if(!cell.equals(focus)) map.cell.focus = cell;
+  else map.cell.focus = undefined;
+
+  const msg = $("#current-cell");
+
+  if(map.cell.focus == undefined) msg.html("Select cell");
+  else msg.html("Current cell: " + cell.x + " - " + cell.y);
+
+  renderer.draw(ctx, map, displayGrid.prop("checked"));
+}
+
+function cellHover(event) {
+  const cell = target(event);
+  const hover = map.cell.hover;
+  switch(event.type) {
+    case "mousemove":
+      if(!cell.equals(hover)) {
+        map.cell.hover = cell;
+        return;
+      }
+      break;
+    case "mouseout":
+      map.cell.hover = undefined;
+      break;
+  }
+  renderer.draw(ctx, map, displayGrid.prop("checked"));
+}
+
+function target(event) {
   const rel = new vec2(
     event.pageX - map.canvas.left,
     event.pageY - map.canvas.top
   );
   const box = map.cell.size + (map.cell.margin * 2);
-  const cell = new vec2(
+  return new vec2(
     Math.min(map.grid.x - 1, Math.max(0, Math.floor(rel.y / box))),
     Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box)))
   );
-  const hover = map.cell.hover;
-  const focus = map.cell.focus;
-  const status = map.data[cell.x][cell.y].status;
-
-  switch(event.type) {
-    case "click":
-      if(!cell.equals(focus)) {
-        try {
-          map.data[focus.x][focus.y].status = 0;
-        } catch { };
-        map.data[cell.x][cell.y].status = 2;
-        map.cell.focus = cell;
-      } else {
-        try {
-          map.data[focus.x][focus.y].status = 0;
-        } catch { };
-        map.cell.focus = undefined;
-      }
-      renderer.draw(ctx, map, displayGrid.checked);
-      break;
-    case "mousemove":
-      if(!cell.equals(hover)) {
-        if(hover != undefined && !hover.equals(focus)) {
-          try {
-            map.data[hover.x][hover.y].status = 0;
-          } catch { };
-        }
-        map.data[cell.x][cell.y].status = 1;
-        map.cell.hover = cell;
-        renderer.draw(ctx, map, displayGrid.checked);
-      }
-      break;
-    case "mouseout":
-      if(status == 1) map.data[cell.x][cell.y].status = 0;
-      map.cell.hover = undefined;
-      renderer.draw(ctx, map, displayGrid.checked);
-      break;
-  }
 }
 
-window.onload = main;
+$(document).ready(main);

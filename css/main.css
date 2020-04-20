@@ -14,11 +14,21 @@ h1 {
 
 #frame {
   cursor: pointer;
-  border: 1px solid #A1A1A1;
   width: 100%;
-  visibility: hidden;
+}
+
+#grid-display {
+  cursor: pointer;
 }
 
 #cell-settings {
   display: none;
+}
+
+.state-color {
+  -webkit-appearance: textfield;
+  -moz-appearance: textfield;
+  appearance: textfield;
+  text-align: center;
+  width: 32% !important;
 }

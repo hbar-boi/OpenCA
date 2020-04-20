@@ -12,21 +12,21 @@
     </header>
     <div class="container">
       <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-7 mr-5">
           <canvas id="frame"></canvas>
         </div>
         <div class="col-lg-4">
           <p class="h4 d-inline">Settings</p>
-          <span class="float-right">Grid size</span>
+          <span class="float-right mt-1">Grid size</span>
           <div class="row mt-2">
             <div class="col-sm pr-1">
-              <input type="number" class="form-control" value="2" placeholder="Grid width" id="x-size" />
+              <input type="number" class="form-control" value="2" min="1" placeholder="Grid width" id="x-size" />
             </div>
             <div class="col-sm pl-1">
-              <input type="number" class="form-control" value="2" placeholder="Grid height" id="y-size" />
+              <input type="number" class="form-control" value="2" min="1" placeholder="Grid height" id="y-size" />
             </div>
           </div>
-          <div class="row mt-2">
+          <div class="row mt-2 mb-2">
             <div class="col-sm pr-1 d-flex justify-content-center">
               <input type="checkbox" class="align-self-center" id="grid-display" />
               <label for="grid-display" class="mb-0 ml-2 align-self-center">
@@ -37,12 +37,39 @@
               <button type="button" class="btn btn-primary btn-block" id="update-grid">Update</button>
             </div>
           </div>
+          <span class="text-right d-block">Configure states</span>
+          <div class="row mt-2">
+            <div class="col-sm pr-1">
+              <button type="button" class="btn btn-block btn-primary dropdown-toggle">
+                Select state
+              </button>
+              <div class="dropdown-menu"></div>
+            </div>
+            <div class="col-sm pl-1">
+              <button type="button" class="btn btn-block btn-primary" id="submit-state">
+                Add state
+              </button>
+            </div>
+          </div>
+          <div class="row mt-1">
+            <div class="col-sm pr-1 mt-1">
+              <input type="text" class="form-control" placeholder="Name" id="state-name" />
+            </div>
+            <div class="col-sm pl-1 mt-1 d-flex justify-content-between">
+              <input type="number" min="0" max="255"
+                class="state-color form-control" placeholder="R" id="state-color-r" />
+              <input type="number" min="0" max="255"
+                class="state-color form-control" placeholder="G" id="state-color-g" />
+              <input type="number" min="0" max="255"
+                class="state-color form-control" placeholder="B" id="state-color-b" />
+            </div>
+          </div>
           <div class="border-top my-3"></div>
           <p class="h4 d-inline">Cell behavior</p>
-          <span class="float-right">Select cell</span>
+          <span class="float-right mt-1" id="current-cell">Select cell</span>
           <div id="cell-settings">
             <div class="row mt-2">
-              
+
             </div>
           </div>
         </div>

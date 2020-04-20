@@ -2,7 +2,7 @@ import {vec3} from "./vectors.mjs";
 
 // This will render the cells on our canvas
 
-const stroke = 1.0;
+const stroke = 1;
 
 export function grid(ctx, map) { // Create grid and display it
 
@@ -13,17 +13,19 @@ export function grid(ctx, map) { // Create grid and display it
   // and stroke to line thickness.
   let parallels = function(ctx, size, length, stroke, n, dir) {
     n = +n + 1;
-    let offset = (size - (n * stroke)) / (n - 1);
-
+    const offset = (size - (n * stroke)) / (n - 1);
     ctx.beginPath();
     for(let i = 0; i < n; i++) {
+      const start = Math.ceil( // Looks awful but canvases need this
+        (offset + stroke) * i + ((i + 1) == n ? 0.5 : 0)
+      );
       ctx.moveTo(
-        dir ? 0 : ((offset + stroke) * i) + 0.5,
-        dir ? ((offset + stroke) * i) + 0.5 : 0
+        dir ? 0 : start,
+        dir ? start : 0
       );
       ctx.lineTo(
-        dir ? length : ((offset + stroke) * i) + 0.5,
-        dir ? ((offset + stroke) * i) + 0.5 : length
+        dir ? length : start,
+        dir ? start : length
       );
     }
     ctx.stroke();
@@ -41,15 +43,15 @@ export function cells(ctx, map) {
   }
 }
 
-const hoverColor = new vec3(195, 235, 239);
-const focusColor = new vec3(125, 153, 237); // Temporary color for active cell
+const hoverColor = new vec3(195, 235, 239); // Temporary color for mouseover cell
+const focusColor = new vec3(125, 153, 237); // Temporary color for clicked cell
 
 export function cell(ctx, x, y, map, color=map.data[x][y].color) { // Inefficient AF
   const box = (map.cell.margin * 2) + map.cell.size;
   ctx.beginPath();
   ctx.rect(
-    map.cell.margin + (box * y) + 0.5,
-    map.cell.margin + (box * x) + 0.5,
+    map.cell.margin + (box * y),
+    map.cell.margin + (box * x),
     map.cell.size, map.cell.size);
   ctx.fillStyle = "rgba(" + color.x + ", " + color.y + ", " + color.z + ", 255)";
   ctx.fill();
