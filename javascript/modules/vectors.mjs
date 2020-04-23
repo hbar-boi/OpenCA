@@ -1,4 +1,5 @@
 
+// Need some way of passing vectors around
 
 export function vec2(x, y) {
   return new vec3(x, y, 0);
@@ -53,6 +54,11 @@ export function vec3(x, y, z) {
 
   this.copy = function() {
     return new vec3(this.x, this.y, this.z);
+  }
+
+  this.toRGBA = function() {
+    const res = "rgba(" + this.x + ", " + this.y + ", " + this.z + ", 255)";
+    return res;
   }
 
   return this;

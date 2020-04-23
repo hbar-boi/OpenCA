@@ -4,6 +4,7 @@
     <meta charset="utf-8"/>
     <title>Web Cellular Automata</title>
     <link rel="stylesheet" href="css/main.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/bootstrap-colorpicker.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   </head>
   <body>
@@ -40,14 +41,21 @@
           <span class="text-right d-block">Configure states</span>
           <div class="row mt-2">
             <div class="col-sm pr-1">
-              <button type="button" class="btn btn-block btn-primary dropdown-toggle">
+              <button type="button" id="state-dropdown"
+                class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                 Select state
               </button>
-              <div class="dropdown-menu"></div>
+              <div class="dropdown-menu" id="state-list"></div>
             </div>
-            <div class="col-sm pl-1">
-              <button type="button" class="btn btn-block btn-primary" id="submit-state">
+            <div class="col-sm pl-1 d-flex justify-content-between">
+              <button type="button" class="btn btn-block new btn-primary" id="add-state">
                 Add state
+              </button>
+              <button type="button" class="btn d-none flex-fill btn-primary" id="edit-state">
+                Save
+              </button>
+              <button stype="button" class="btn d-none flex-fill ml-2 btn-danger" id="remove-state">
+                Delete
               </button>
             </div>
           </div>
@@ -55,13 +63,11 @@
             <div class="col-sm pr-1 mt-1">
               <input type="text" class="form-control" placeholder="Name" id="state-name" />
             </div>
-            <div class="col-sm pl-1 mt-1 d-flex justify-content-between">
-              <input type="number" min="0" max="255"
-                class="state-color form-control" placeholder="R" id="state-color-r" />
-              <input type="number" min="0" max="255"
-                class="state-color form-control" placeholder="G" id="state-color-g" />
-              <input type="number" min="0" max="255"
-                class="state-color form-control" placeholder="B" id="state-color-b" />
+            <div class="col-sm pl-1 mt-1 input-group" id="state-color">
+              <input type="text" class="form-control" value="#A154F2" />
+              <span class="input-group-append">
+                <span class="input-group-text colorpicker-input-addon"><i></i></span>
+              </span>
             </div>
           </div>
           <div class="border-top my-3"></div>
@@ -78,6 +84,7 @@
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="javascript/lib/bootstrap-colorpicker.min.js" type="text/javascript"/></script>
 
     <script src="javascript/main.js" type="module"/></script>
   </body>

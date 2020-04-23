@@ -20,15 +20,3 @@ h1 {
 #grid-display {
   cursor: pointer;
 }
-
-#cell-settings {
-  display: none;
-}
-
-.state-color {
-  -webkit-appearance: textfield;
-  -moz-appearance: textfield;
-  appearance: textfield;
-  text-align: center;
-  width: 32% !important;
-}
