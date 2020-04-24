@@ -23,7 +23,7 @@ function parallels(ctx, space, length, num, dir) {
   ctx.stroke();
 }
 
-function cell(ctx, x, y, map, color=map.data[x][y].color) {
+function cell(ctx, x, y, map, color=map.states[map.data[x][y].state].color) {
   const box = (map.cell.margin * 2) + map.cell.size;
   ctx.beginPath();
   ctx.rect(

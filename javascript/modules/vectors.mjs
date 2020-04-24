@@ -1,14 +1,23 @@
 
 // Need some way of passing vectors around
 
-export function vec2(x, y) {
-  return new vec3(x, y, 0);
+export function vec2(...args) {
+  if(args.length > 1) return new vec3(args[0], args[1], 0);
+  else return new vec3(args[0].x, args[0].y, 0);
 }
 
-export function vec3(x, y, z) {
-  this.x = x;
-  this.y = y;
-  this.z = z;
+
+export function vec3(...args) {
+  if(args.length > 1) {
+    this.x = +args[0];
+    this.y = +args[1];
+    this.z = +args[2];
+  } else {
+    this.x = +args[0].x;
+    this.y = +args[0].y;
+    this.z = +args[0].z;
+  }
+
 
   this.sub = function(other) {
     add(other.neg());

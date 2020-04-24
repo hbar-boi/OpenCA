@@ -1,8 +1,3 @@
-html, body {
-  margin: 0;
-  padding: 0;
-}
-
 h1 {
   text-align: center;
   padding: 40px 0 40px 0;
@@ -19,4 +14,12 @@ h1 {
 
 #grid-display {
   cursor: pointer;
+}
+
+.color-box {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #DBDBDB;
+  border-radius: 4px;
+  margin-left: 10px;
 }

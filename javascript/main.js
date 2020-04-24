@@ -27,11 +27,11 @@ function init() {
   });
 
   $("#edit-state").click(function(event) {
-    ui.saveState($("#state-name").attr("state-id"))
+    ui.saveState($("#state-list").attr("state-id"))
   });
 
   $("#remove-state").click(function(event) {
-    ui.removeState($("#state-name").attr("state-id"))
+    ui.removeState($("#state-list").attr("state-id"))
   });
 
   update();
@@ -79,8 +79,13 @@ function update() { // Update canvas size using grid data
   // Fill data array with blank objects
   map.data = [];
   const init = JSON.stringify({
-    color: new vec3(255, 255, 255),
-  }); // Fill all cells white
+    "state": 0,
+    "actions": [{
+      "target": "1 - 2",
+      "condition": 0,
+      "result": 1
+    }]
+  }); // Fill all cells
   for(let i = 0; i < x; i++) {
     let col = [];
     for(let j = 0; j < y; j++) {
@@ -90,8 +95,8 @@ function update() { // Update canvas size using grid data
   }
 
   map.states.push({
-    name: "Default",
-    color: new vec3(255, 255, 255)
+    "name": "Default",
+    "color": new vec3(255, 255, 255)
   });
 
   ui.update();

@@ -4,21 +4,20 @@ import {map} from "./engine.mjs";
 
 // Handle all UI stuff
 
-export function saveState(id=undefined, remove=false) {
+export function saveState(id=undefined) {
   const name = $("#state-name").val();
-  if(name == "") return;
   const color = $("#state-color").colorpicker("getValue").match(/\d+/g);
   const state = {
-    name: name,
-    color: new vec3(color[0], color[1], color[2])
+    "name": name,
+    "color": new vec3(color[0], color[1], color[2])
   };
+
+  if(name == "" || map.states.some( // State should have a name and a new color
+    e => new vec3(e.color).equals(state.color))
+  ) return;
 
   if(id == undefined) map.states.push(state);
   else map.states[id] = state;
-
-  $("#edit-state").addClass("d-none");
-  $("#remove-state").addClass("d-none");
-  $("#add-state").removeClass("d-none");
 
   update();
 }
@@ -28,14 +27,10 @@ export function removeState(id) {
 
   if(map.states.length == 0) {
     map.states.push({
-      name: "Default",
-      color: new vec3(255, 255, 255)
+      "name": "Default",
+      "color": new vec3(255, 255, 255)
     });
   }
-
-  $("#edit-state").addClass("d-none");
-  $("#remove-state").addClass("d-none");
-  $("#add-state").removeClass("d-none");
 
   update();
 }
@@ -43,15 +38,20 @@ export function removeState(id) {
 export function editState(event) {
   const id = event.target.getAttribute("state-id");
   const state = map.states[id];
-  const color = state.color;
-  $("#state-name").val(state.name).attr("state-id", id);
-  $("#state-color").colorpicker("setValue",
-    "rgb(" + color.x + ", "+  color.y + ", " + color.z + ")"
-  );
+  const color = new vec3(state.color);
+  $("#state-list").attr("state-id", id);
+  $("#state-name").val(state.name);
+  $("#state-color").colorpicker("setValue", color.toRGBA());
 
   $("#edit-state").removeClass("d-none");
   $("#remove-state").removeClass("d-none");
   $("#add-state").addClass("d-none");
+}
+
+function setState(event) {
+  const id = event.target.getAttribute("state-id");
+  const cell = map.cell.focus;
+  map.data[cell.x][cell.y].state = +id;
 }
 
 export function cellClick(event) {
@@ -61,11 +61,26 @@ export function cellClick(event) {
   if(!cell.equals(focus)) map.cell.focus = cell;
   else map.cell.focus = undefined;
 
-  const msg = $("#current-cell");
+  const list = $("#cell-actions");
+  list.html("");
 
-  if(map.cell.focus == undefined) msg.html("Select cell");
-  else msg.html("Current cell: " + cell.x + " - " + cell.y);
-  draw();
+  if(map.cell.focus == undefined) {
+    $("#current-cell").html("Select cell");
+    $("#actions").addClass("d-none");
+  } else {
+    $("#current-cell").html("Current cell: (" + cell.x + ", " + cell.y + ")");
+    $("#actions").removeClass("d-none");
+
+    const actions = map.data[cell.x][cell.y].actions;
+    const action = $("<li></li>");
+    action.addClass("list-group-item");
+    actions.forEach(function(item, i) {
+      action.html("IF: " + item.target + " IS " + item.condition + " THEN " + item.result);
+      list.append(action[0].cloneNode(true));
+    });
+  }
+
+  if(event != undefined) draw();
 }
 
 export function cellHover(event) {
@@ -82,6 +97,7 @@ export function cellHover(event) {
       map.cell.hover = undefined;
       break;
   }
+
   draw();
 }
 
@@ -98,18 +114,40 @@ function targetCell(event) {
 }
 
 export function update() {
-  const list = $("#state-list");
-  list.html("");
-  const entry = $("<button></button>");
-  entry.addClass("dropdown-item state");
-  map.states.forEach(function(item, i) {
-    entry.attr("state-id", i);
-    entry.html(item.name);
-    list.append(entry[0].cloneNode(true));
+  $("#state-name").val("");
+  $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
+
+  $("#edit-state").addClass("d-none");
+  $("#remove-state").addClass("d-none");
+  $("#add-state").removeClass("d-none");
+
+  populateStateList($("#state-list"), "edit-state-entry");
+  $(".edit-state-entry").click(function(event) {
+    editState(event);
   });
 
-  $(".state").click(function(event) {
-    editState(event);
+  populateStateList($("#state-set"), "set-state-entry");
+  $(".set-state-entry").click(function(event) {
+    setState(event);
+  });
+
+  draw();
+}
+
+function populateStateList(list, identifier) {
+  list.html("");
+
+  const entry = $("<button></button>");
+  entry.addClass("dropdown-item d-flex justify-content-between " + identifier);
+  const color = $("<span></span>");
+  color.addClass("color-box");
+
+  map.states.forEach(function(item, i) {
+    color.css("background-color", new vec3(item.color).toRGBA());
+    entry.attr("state-id", i);
+    entry.html(item.name);
+    entry.append(color[0].cloneNode(true));
+    list.append(entry[0].cloneNode(true));
   });
 }
 

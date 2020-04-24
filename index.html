@@ -17,19 +17,19 @@
           <canvas id="frame"></canvas>
         </div>
         <div class="col-lg-4">
-          <p class="h4 d-inline">Settings</p>
+          <p class="h4 d-inline">Global settings</p>
           <span class="float-right mt-1">Grid size</span>
           <div class="row mt-2">
             <div class="col-sm pr-1">
-              <input type="number" class="form-control" value="2" min="1" placeholder="Grid width" id="x-size" />
+              <input type="number" class="form-control" value="4" min="1" placeholder="Grid width" id="x-size" />
             </div>
             <div class="col-sm pl-1">
-              <input type="number" class="form-control" value="2" min="1" placeholder="Grid height" id="y-size" />
+              <input type="number" class="form-control" value="4" min="1" placeholder="Grid height" id="y-size" />
             </div>
           </div>
           <div class="row mt-2 mb-2">
             <div class="col-sm pr-1 d-flex justify-content-center">
-              <input type="checkbox" class="align-self-center" id="grid-display" />
+              <input type="checkbox" checked class="align-self-center" id="grid-display" />
               <label for="grid-display" class="mb-0 ml-2 align-self-center">
                 Display grid
               </span>
@@ -41,7 +41,7 @@
           <span class="text-right d-block">Configure states</span>
           <div class="row mt-2">
             <div class="col-sm pr-1">
-              <button type="button" id="state-dropdown"
+              <button type="button"
                 class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                 Select state
               </button>
@@ -54,7 +54,7 @@
               <button type="button" class="btn d-none flex-fill btn-primary" id="edit-state">
                 Save
               </button>
-              <button stype="button" class="btn d-none flex-fill ml-2 btn-danger" id="remove-state">
+              <button type="button" class="btn d-none flex-fill ml-2 btn-danger" id="remove-state">
                 Delete
               </button>
             </div>
@@ -73,9 +73,26 @@
           <div class="border-top my-3"></div>
           <p class="h4 d-inline">Cell behavior</p>
           <span class="float-right mt-1" id="current-cell">Select cell</span>
-          <div id="cell-settings">
-            <div class="row mt-2">
-
+          <div class="d-none" id="actions">
+            <div class="row mt-2 mb-2">
+              <div class="col-sm pr-1">
+                <button type="button" class="btn btn-block btn-primary" id="add-action">
+                  Add action
+                </button>
+              </div>
+              <div class="col-sm pl-1">
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Set state
+                </button>
+                <div class="dropdown-menu" id="state-set"></div>
+              </div>
+            </div>
+            <span class="text-right d-block mt-1">Configure actions</span>
+            <div class="row">
+              <div class="col-sm">
+                <ul class="list-group list-group-flush" id="cell-actions"></ul>
+              </div>
             </div>
           </div>
         </div>
