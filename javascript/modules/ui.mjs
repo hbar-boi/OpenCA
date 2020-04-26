@@ -1,10 +1,74 @@
 import {vec2, vec3} from "./vectors.mjs";
 import {draw as _draw} from "./renderer.mjs";
-import {map} from "./engine.mjs";
+import {map, action} from "./engine.mjs";
 
 // Handle all UI stuff
 
-export function saveState(id=undefined) {
+// Define all colors we'll be using
+// FEAR NOT: even if one of these colors is chosen to represent a state, nothing
+// bad happens. The only thing is that it will be impossible to tell them apart.
+export const colors = {
+  "HOVER_COLOR": new vec3(195, 235, 239),
+  "FOCUS_COLOR": new vec3(125, 153, 237),
+  "TARGET_COLOR": new vec3(152, 111, 255),
+  "DEFAULT_COLOR": new vec3(255, 255, 255),
+  "LINE_COLOR": new vec3(161, 161, 161)
+};
+
+// ================= UI STUFF FOR WORKING ON ACTIONS =====================
+
+export function setActionTarget(event) {
+  const target = +event.target.getAttribute("data");
+  switch(target) {
+    case action.TARGET_ONE:
+      map.canvas.disabled = false;
+      $("#target-distance").hide();
+      $("#target-cell").show();
+      break;
+    case action.TARGET_NEIGHBOR:
+      map.cell.target = undefined;
+      $("#target-cell").html("Select target").hide();
+      $("#target-distance").show();
+      break;
+  }
+  $("#mode-list .dropdown-item:gt(-3)").prop("disabled",
+    target == action.TARGET_ONE);
+
+  draw();
+}
+
+export function saveAction() {
+  const target = +$("#target-list").attr("active");
+  const mode = +$("#mode-list").attr("active");
+  const entry = {
+    "target": target,
+    "mode": mode,
+    "test": +$("#test-state-list").attr("active"),
+    "new": +$("#new-state-list").attr("active")
+  };
+  if(target == action.TARGET_NEIGHBOR)
+    entry.distance = +$("#target-distance").val();
+  else
+    entry.other = map.cell.target;
+  if(mode == action.MODE_LESS || mode == action.MODE_MORE)
+    entry.threshold = +$("#action-threshold").val();
+
+  const current = map.cell.focus;
+  map.data[current.x][current.y].actions.push(entry);
+
+  populateActionList($("#cell-actions"), map.cell.focus);
+
+  map.canvas.disabled = false;
+  $("#main-menu").show();
+  $("#action-menu").hide();
+  map.cell.target = undefined;
+
+  update();
+}
+
+// ================= UI STUFF FOR WORKING ON STATES =====================
+
+export function saveState(id = undefined) { // Create new state or save edits
   const name = $("#state-name").val();
   const color = $("#state-color").colorpicker("getValue").match(/\d+/g);
   const state = {
@@ -12,79 +76,90 @@ export function saveState(id=undefined) {
     "color": new vec3(color[0], color[1], color[2])
   };
 
-  if(name == "" || map.states.some( // State should have a name and a new color
+  // State should have an unique name and color
+  if(name == "" || map.states.some(
     e => new vec3(e.color).equals(state.color))
   ) return;
 
-  if(id == undefined) map.states.push(state);
+  // Create new state or update old one
+  if(id == undefined) {
+    map.states.push(state);
+  }
   else map.states[id] = state;
-
+  // Rebuild list
   update();
 }
 
-export function removeState(id) {
+export function removeState(id) { // Rip
   map.states.splice(id, 1);
-
   if(map.states.length == 0) {
     map.states.push({
       "name": "Default",
       "color": new vec3(255, 255, 255)
     });
   }
-
+  // Rebuild list
   update();
 }
 
-export function editState(event) {
-  const id = event.target.getAttribute("state-id");
+export function editState(event) { // Change UI to allow editing of state params
+  const id = event.target.getAttribute("data");
   const state = map.states[id];
   const color = new vec3(state.color);
-  $("#state-list").attr("state-id", id);
+  // Prepare current state data
+  $("#state-list").attr("active", id);
   $("#state-name").val(state.name);
   $("#state-color").colorpicker("setValue", color.toRGBA());
 
-  $("#edit-state").removeClass("d-none");
-  $("#remove-state").removeClass("d-none");
-  $("#add-state").addClass("d-none");
+  $("#edit-state").show();
+  $("#remove-state").show();
+  $("#add-state").hide();
 }
 
-function setState(event) {
-  const id = event.target.getAttribute("state-id");
-  const cell = map.cell.focus;
-  map.data[cell.x][cell.y].state = +id;
-}
+// =============== UI STUFF CONCERNING CELL INTERACTIONS ===================
 
 export function cellClick(event) {
-  const cell = targetCell(event);
-  const focus = map.cell.focus;
-
-  if(!cell.equals(focus)) map.cell.focus = cell;
-  else map.cell.focus = undefined;
-
-  const list = $("#cell-actions");
-  list.html("");
-
-  if(map.cell.focus == undefined) {
-    $("#current-cell").html("Select cell");
-    $("#actions").addClass("d-none");
-  } else {
-    $("#current-cell").html("Current cell: (" + cell.x + ", " + cell.y + ")");
-    $("#actions").removeClass("d-none");
-
-    const actions = map.data[cell.x][cell.y].actions;
-    const action = $("<li></li>");
-    action.addClass("list-group-item");
-    actions.forEach(function(item, i) {
-      action.html("IF: " + item.target + " IS " + item.condition + " THEN " + item.result);
-      list.append(action[0].cloneNode(true));
-    });
+  // Need a way to tell if we're working on the focus cell
+  // or the target cell. This is determined by mode.
+  // This way we can use the same function to select two different cells
+  // in different moments.
+  const setActive = function(which, set) {
+    // which = true -> working on focus cell.
+    // which = false -> working on target cell.
+    if(which) map.cell.focus = set;
+    else map.cell.target = set;
   }
 
-  if(event != undefined) draw();
+  const mode = $("#main-menu").is(":visible");
+  const active = mode ? map.cell.focus : map.cell.target;
+  const cell = eventCell(event);
+
+  if(cell.equals(active)) { // Clicked on active cell. Remove selection
+    setActive(mode, undefined);
+    if(mode) { // If we are in focus mode do UI stuff for focus mode
+      $("#cell-actions").html("");
+      $("#current-cell").html("Select cell");
+      $("#cell-menu").hide();
+    } else { // Same for target mode
+      $("#target-cell").html("Select target");
+    }
+  } else { // Clicked on another cell. Move selection
+    setActive(mode, cell);
+    if(mode) { // Update cell actions 'n shit
+      $("#current-cell").html("Current cell: (" + cell.x + ", " + cell.y + ")");
+      $("#cell-menu").show();
+
+      populateActionList($("#cell-actions"), cell);
+    } else { // Update target stuff
+      $("#target-cell").html("Target is (" + cell.x + ", " + cell.y + ")");
+    }
+  }
+
+  draw();
 }
 
-export function cellHover(event) {
-  const cell = targetCell(event);
+export function cellHover(event) { // Cell with cursor on changes color
+  const cell = eventCell(event);
   const hover = map.cell.hover;
   switch(event.type) {
     case "mousemove":
@@ -94,33 +169,35 @@ export function cellHover(event) {
       }
       break;
     case "mouseout":
-      map.cell.hover = undefined;
+      map.cell.hover = undefined; // Reset object
       break;
   }
 
   draw();
 }
 
-function targetCell(event) {
-  const rel = new vec2(
+function eventCell(event) { // Returns a vec2 containing indices for cell
+  const rel = new vec2( // Translate to top-left of canvas
     event.pageX - map.canvas.left,
     event.pageY - map.canvas.top
   );
   const box = map.cell.size + (map.cell.margin * 2);
-  return new vec2(
+  return new vec2( // Just divide and clamp to get index. Easy as that.
     Math.min(map.grid.x - 1, Math.max(0, Math.floor(rel.y / box))),
     Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box)))
   );
 }
 
-export function update() {
+// ================== RANDOM UTILS FOR UI =============================
+
+export function update() { // Reset UI after some major change
   $("#state-name").val("");
   $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
 
-  $("#edit-state").addClass("d-none");
-  $("#remove-state").addClass("d-none");
-  $("#add-state").removeClass("d-none");
-
+  $("#edit-state").hide();
+  $("#remove-state").hide();
+  $("#add-state").show();
+  // Rebuild lists containing changed data
   populateStateList($("#state-list"), "edit-state-entry");
   $(".edit-state-entry").click(function(event) {
     editState(event);
@@ -128,30 +205,56 @@ export function update() {
 
   populateStateList($("#state-set"), "set-state-entry");
   $(".set-state-entry").click(function(event) {
-    setState(event);
+    const cell = map.cell.focus;
+    map.data[cell.x][cell.y].state = event.target.getAttribute("data");
+  });
+
+  populateStateList($("#test-state-list"), "test-state-entry");
+  populateStateList($("#new-state-list"), "new-state-list");
+
+  // This crap is needed to make Bootstrap dropdowns work as selects
+  $("#state-list, #mode-list, #target-list, #test-state-list, #new-state-list")
+    .find(".dropdown-item").click(function(event) {
+    const active = +event.target.getAttribute("data");
+    event.target.parentElement.setAttribute("active", active);
   });
 
   draw();
 }
 
-function populateStateList(list, identifier) {
+function populateStateList(list, identifier) { // Fills a bootstrap dropdown
   list.html("");
 
   const entry = $("<button></button>");
   entry.addClass("dropdown-item d-flex justify-content-between " + identifier);
-  const color = $("<span></span>");
-  color.addClass("color-box");
 
   map.states.forEach(function(item, i) {
-    color.css("background-color", new vec3(item.color).toRGBA());
-    entry.attr("state-id", i);
+    entry.attr("data", i);
     entry.html(item.name);
-    entry.append(color[0].cloneNode(true));
+    entry.append(getColorBox(item.color));
     list.append(entry[0].cloneNode(true));
   });
 }
 
-export function draw() {
+function populateActionList(list, cell) {
+  list.html("");
+
+  const actions = map.data[cell.x][cell.y].actions;
+  const entry = $("<li></li>").addClass("list-group-item");
+  actions.forEach(function(item, i) {
+    entry.html("");
+    entry.append(getColorBox(map.states[item.new].color));
+    list.append(entry[0].cloneNode(true));
+  });
+}
+
+function getColorBox(color) {
+  const box = $("<span></span>").addClass("color-box")
+    .css("background-color", new vec3(color).toRGBA());
+  return box;
+}
+
+export function draw() { // Gets context and calls renderer's draw()
   const grid = $("#grid-display").prop("checked");
   const ctx = $("#frame")[0].getContext("2d");
 

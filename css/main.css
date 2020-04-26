@@ -22,4 +22,9 @@ h1 {
   border: 1px solid #DBDBDB;
   border-radius: 4px;
   margin-left: 10px;
+  display: inline-block;
+}
+
+#edit-state, #remove-state, #cell-menu, #action-menu, #target-distance {
+  display: none;
 }

@@ -1,17 +1,17 @@
 import * as renderer from "./modules/renderer.mjs";
 import {vec2, vec3} from "./modules/vectors.mjs";
-import {map} from "./modules/engine.mjs";
+import {map, action} from "./modules/engine.mjs";
 import * as ui from "./modules/ui.mjs";
 
 function init() {
   const canvas = $("#frame");
   // First thing first: bind all events
   canvas.on("mousemove mouseout", function(event) {
-    ui.cellHover(event)
+    if(!map.canvas.disabled) ui.cellHover(event)
   });
 
   canvas.click(function(event) {
-    ui.cellClick(event)
+    if(!map.canvas.disabled) ui.cellClick(event)
   });
 
   $("#update-grid").click(update);
@@ -23,15 +23,42 @@ function init() {
   });
 
   $("#add-state").click(function() {
-    ui.saveState()
+    ui.saveState(undefined)
   });
 
   $("#edit-state").click(function(event) {
-    ui.saveState($("#state-list").attr("state-id"))
+    ui.saveState($("#state-list").attr("active"))
   });
 
   $("#remove-state").click(function(event) {
-    ui.removeState($("#state-list").attr("state-id"))
+    ui.removeState($("#state-list").attr("active"))
+  });
+
+  $("#target-list .dropdown-item").click(function(event) {
+    ui.setActionTarget(event);
+  });
+
+  $("#mode-list .dropdown-item").click(function(event) {
+    const mode = +event.target.getAttribute("data");
+    $("#action-thresh").prop("disabled",
+      mode == action.MODE_IS || mode == action.MODE_NOT);
+  });
+
+  $("#action-apply").click(ui.saveAction);
+
+  $("#action-cancel").click(function() {
+    map.canvas.disabled = false;
+    $("#main-menu").show();
+    $("#action-menu").hide();
+    map.cell.target = undefined;
+    ui.draw();
+  });
+
+  $("#action-add").click(function() {
+    map.canvas.disabled = true;
+    $("#action-menu").show();
+    $("#main-menu").hide()
+    ui.draw();
   });
 
   update();
@@ -55,9 +82,11 @@ function update() { // Update canvas size using grid data
 
   if(x > y) [x, y] = [y, x] // There should be always more cols than rows
 
+  // Update our map object: it's kinda important
   map.grid.x = x;
   map.grid.y = y;
 
+  // We want always-square cells, so resize the canvas accordingly
   const ratio = x / y;
   map.canvas.width = canvas[0].width = Math.round(
     canvas[0].offsetWidth * window.devicePixelRatio);
@@ -75,16 +104,13 @@ function update() { // Update canvas size using grid data
 
   map.cell.hover = undefined;
   map.cell.focus = undefined;
+  map.cell.target = undefined;
 
   // Fill data array with blank objects
   map.data = [];
   const init = JSON.stringify({
     "state": 0,
-    "actions": [{
-      "target": "1 - 2",
-      "condition": 0,
-      "result": 1
-    }]
+    "actions": []
   }); // Fill all cells
   for(let i = 0; i < x; i++) {
     let col = [];
@@ -93,10 +119,10 @@ function update() { // Update canvas size using grid data
     }
     map.data.push(col);
   }
-
+  // Create default state - boring
   map.states.push({
     "name": "Default",
-    "color": new vec3(255, 255, 255)
+    "color": ui.colors.DEFAULT_COLOR
   });
 
   ui.update();

@@ -17,81 +17,149 @@
           <canvas id="frame"></canvas>
         </div>
         <div class="col-lg-4">
-          <p class="h4 d-inline">Global settings</p>
-          <span class="float-right mt-1">Grid size</span>
-          <div class="row mt-2">
-            <div class="col-sm pr-1">
-              <input type="number" class="form-control" value="4" min="1" placeholder="Grid width" id="x-size" />
-            </div>
-            <div class="col-sm pl-1">
-              <input type="number" class="form-control" value="4" min="1" placeholder="Grid height" id="y-size" />
-            </div>
-          </div>
-          <div class="row mt-2 mb-2">
-            <div class="col-sm pr-1 d-flex justify-content-center">
-              <input type="checkbox" checked class="align-self-center" id="grid-display" />
-              <label for="grid-display" class="mb-0 ml-2 align-self-center">
-                Display grid
-              </span>
-            </div>
-            <div class="col-sm pl-1">
-              <button type="button" class="btn btn-primary btn-block" id="update-grid">Update</button>
-            </div>
-          </div>
-          <span class="text-right d-block">Configure states</span>
-          <div class="row mt-2">
-            <div class="col-sm pr-1">
-              <button type="button"
-                class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
-                Select state
-              </button>
-              <div class="dropdown-menu" id="state-list"></div>
-            </div>
-            <div class="col-sm pl-1 d-flex justify-content-between">
-              <button type="button" class="btn btn-block new btn-primary" id="add-state">
-                Add state
-              </button>
-              <button type="button" class="btn d-none flex-fill btn-primary" id="edit-state">
-                Save
-              </button>
-              <button type="button" class="btn d-none flex-fill ml-2 btn-danger" id="remove-state">
-                Delete
-              </button>
-            </div>
-          </div>
-          <div class="row mt-1">
-            <div class="col-sm pr-1 mt-1">
-              <input type="text" class="form-control" placeholder="Name" id="state-name" />
-            </div>
-            <div class="col-sm pl-1 mt-1 input-group" id="state-color">
-              <input type="text" class="form-control" value="#A154F2" />
-              <span class="input-group-append">
-                <span class="input-group-text colorpicker-input-addon"><i></i></span>
-              </span>
-            </div>
-          </div>
-          <div class="border-top my-3"></div>
-          <p class="h4 d-inline">Cell behavior</p>
-          <span class="float-right mt-1" id="current-cell">Select cell</span>
-          <div class="d-none" id="actions">
-            <div class="row mt-2 mb-2">
+          <div id="main-menu">
+            <p class="h4 d-inline">Global settings</p>
+            <span class="float-right mt-1">Grid size</span>
+            <div class="row mt-2">
               <div class="col-sm pr-1">
-                <button type="button" class="btn btn-block btn-primary" id="add-action">
-                  Add action
+                <input type="number" class="form-control" value="4" min="1" placeholder="Grid width" id="x-size" />
+              </div>
+              <div class="col-sm pl-1">
+                <input type="number" class="form-control" value="4" min="1" placeholder="Grid height" id="y-size" />
+              </div>
+            </div>
+            <div class="row mt-2 mb-2">
+              <div class="col-sm pr-1 d-flex justify-content-center">
+                <input type="checkbox" checked class="align-self-center" id="grid-display" />
+                <label for="grid-display" class="mb-0 ml-2 align-self-center">
+                  Display grid
+                </span>
+              </div>
+              <div class="col-sm pl-1">
+                <button type="button" class="btn btn-primary btn-block" id="update-grid">Update</button>
+              </div>
+            </div>
+            <span class="text-right d-block">Configure states</span>
+            <div class="row mt-2">
+              <div class="col-sm pr-1">
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Select state
                 </button>
+                <div class="dropdown-menu" id="state-list"></div>
+              </div>
+              <div class="col-sm pl-1 d-flex justify-content-between">
+                <button type="button" class="btn btn-block new btn-primary" id="add-state">
+                  Add state
+                </button>
+                <button type="button" class="btn flex-fill btn-primary" id="edit-state">
+                  Save
+                </button>
+                <button type="button" class="btn flex-fill ml-2 btn-danger" id="remove-state">
+                  Delete
+                </button>
+              </div>
+            </div>
+            <div class="row mt-1">
+              <div class="col-sm pr-1 mt-1">
+                <input type="text" class="form-control" placeholder="Name" id="state-name" />
+              </div>
+              <div class="col-sm pl-1 mt-1 input-group" id="state-color">
+                <input type="text" class="form-control" />
+                <span class="input-group-append">
+                  <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                </span>
+              </div>
+            </div>
+            <div class="border-top my-3"></div>
+            <p class="h4 d-inline">Cell behavior</p>
+            <span class="float-right mt-1" id="current-cell">Select cell</span>
+            <div id="cell-menu">
+              <div class="row mt-2 mb-2">
+                <div class="col-sm pr-1">
+                  <button type="button" id="action-add" class="btn btn-block btn-primary">
+                    Add action
+                  </button>
+                </div>
+                <div class="col-sm pl-1">
+                  <button type="button"
+                    class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                    Set state
+                  </button>
+                  <div class="dropdown-menu" id="state-set"></div>
+                </div>
+              </div>
+              <span class="text-right d-block mt-1">Configure actions</span>
+              <div class="row">
+                <div class="col-sm">
+                  <ul class="list-group list-group-flush" id="cell-actions"></ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="action-menu">
+            <span class="text-right d-block">Select action target and define neighbor size.</span>
+            <div class="row mb-1 mt-1">
+              <div class="col-sm pr-1">
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Target
+                </button>
+                <div class="dropdown-menu" id="target-list">
+                  <button class="dropdown-item" data="1">Single</button>
+                  <button class="dropdown-item" data="0">Neighbor</button>
+                </div>
+              </div>
+              <div class="col-sm pl-1 d-flex justify-content-center">
+                <span class="align-self-center" id="target-cell">Select target</span>
+                <input type="number" min="1" placeholder="Distance" id="target-distance" class="form-control" />
+              </div>
+            </div>
+            <span class="text-right d-block">Define test mode and parameters.</span>
+            <div class="row mb-1 mt-1">
+              <div class="col-sm pr-1">
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Mode
+                </button>
+                <div class="dropdown-menu" id="mode-list">
+                  <button data="0" class="dropdown-item">Equals to</button>
+                  <button data="1" class="dropdown-item">Differs from</button>
+                  <button data="2" class="dropdown-item" disabled>Less than</button>
+                  <button data="3" class="dropdown-item" disabled>More than</button>
+                </div>
+              </div>
+              <div class="col-sm pl-1">
+                <input type="number" min="1" disabled placeholder="Threshold" id="action-thresh" class="form-control d-inline w-50" />
+                <span class="align-self-center ml-2">equal</span>
+              </div>
+            </div>
+            <span class="text-right d-block">Define test state and the new one for this cell.</span>
+            <div class="row mb-2 mt-1">
+              <div class="col-sm pr-1">
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Test state
+                </button>
+                <div class="dropdown-menu" id="test-state-list"></div>
               </div>
               <div class="col-sm pl-1">
                 <button type="button"
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
-                  Set state
+                  New state
                 </button>
-                <div class="dropdown-menu" id="state-set"></div>
+                <div class="dropdown-menu" id="new-state-list"></div>
               </div>
             </div>
-            <span class="text-right d-block mt-1">Configure actions</span>
             <div class="row">
-              <div class="col-sm">
-                <ul class="list-group list-group-flush" id="cell-actions"></ul>
+              <div class="col-sm pr-1"></div>
+              <div class="col-sm pl-1 d-flex">
+                <button type="button" class="btn flex-fill btn-primary" id="action-apply">
+                  Save
+                </button>
+                <button type="button" class="btn flex-fill btn-danger ml-2" id="action-cancel">
+                  Cancel
+                </button>
               </div>
             </div>
           </div>
