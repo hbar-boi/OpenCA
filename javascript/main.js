@@ -38,12 +38,6 @@ function init() {
     ui.setActionTarget(event);
   });
 
-  $("#mode-list .dropdown-item").click(function(event) {
-    const mode = +event.target.getAttribute("data");
-    $("#action-thresh").prop("disabled",
-      mode == action.MODE_IS || mode == action.MODE_NOT);
-  });
-
   $("#action-apply").click(ui.saveAction);
 
   $("#action-cancel").click(function() {
@@ -120,10 +114,10 @@ function update() { // Update canvas size using grid data
     map.data.push(col);
   }
   // Create default state - boring
-  map.states.push({
+  map.states = [{
     "name": "Default",
     "color": ui.colors.DEFAULT_COLOR
-  });
+  }];
 
   ui.update();
   ui.draw();

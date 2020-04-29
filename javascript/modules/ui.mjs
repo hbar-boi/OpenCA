@@ -33,6 +33,8 @@ export function setActionTarget(event) {
   }
   $("#mode-list .dropdown-item:gt(-3)").prop("disabled",
     target == action.TARGET_ONE);
+  $("#action-thresh").prop("disabled",
+    target == action.TARGET_ONE);
 
   draw();
 }
@@ -46,12 +48,10 @@ export function saveAction() {
     "test": +$("#test-state-list").attr("active"),
     "new": +$("#new-state-list").attr("active")
   };
-  if(target == action.TARGET_NEIGHBOR)
+  if(target == action.TARGET_NEIGHBOR) {
     entry.distance = +$("#target-distance").val();
-  else
-    entry.other = map.cell.target;
-  if(mode == action.MODE_LESS || mode == action.MODE_MORE)
-    entry.threshold = +$("#action-threshold").val();
+    entry.threshold = +$("#action-thresh").val();
+  } else entry.other = map.cell.target;
 
   const current = map.cell.focus;
   map.data[current.x][current.y].actions.push(entry);
@@ -62,6 +62,14 @@ export function saveAction() {
   $("#main-menu").show();
   $("#action-menu").hide();
   map.cell.target = undefined;
+
+  update();
+}
+
+export function removeAction(event) {
+  const id = event.target.getAttribute("action-id");
+  const focus = map.cell.focus;
+  map.data[focus.x][focus.y].actions.splice(id, 1);
 
   update();
 }
@@ -116,7 +124,7 @@ export function editState(event) { // Change UI to allow editing of state params
   $("#add-state").hide();
 }
 
-// =============== UI STUFF CONCERNING CELL INTERACTIONS ===================
+// =============== UI STUFF FOR CELL INTERACTIONS ===================
 
 export function cellClick(event) {
   // Need a way to tell if we're working on the focus cell
@@ -212,7 +220,10 @@ export function update() { // Reset UI after some major change
   populateStateList($("#test-state-list"), "test-state-entry");
   populateStateList($("#new-state-list"), "new-state-list");
 
-  // This crap is needed to make Bootstrap dropdowns work as selects
+  if(map.cell.focus != undefined)
+    populateActionList($("#cell-actions"), map.cell.focus);
+
+  // This is needed to make Bootstrap dropdowns work as selects
   $("#state-list, #mode-list, #target-list, #test-state-list, #new-state-list")
     .find(".dropdown-item").click(function(event) {
     const active = +event.target.getAttribute("data");
@@ -236,22 +247,56 @@ function populateStateList(list, identifier) { // Fills a bootstrap dropdown
   });
 }
 
-function populateActionList(list, cell) {
+function populateActionList(list, cell) { // Fills a bootstrap list
   list.html("");
 
   const actions = map.data[cell.x][cell.y].actions;
   const entry = $("<li></li>").addClass("list-group-item");
   actions.forEach(function(item, i) {
-    entry.html("");
-    entry.append(getColorBox(map.states[item.new].color));
+    entry.attr("action-id", i);
+    let content = "If ";
+    switch(item.target) {
+      case action.TARGET_NEIGHBOR:
+        switch(item.mode) {
+          case action.MODE_LESS:
+            content += "less than ";
+            break;
+          case action.MODE_MORE:
+            content += "more than ";
+            break;
+          default:
+            content += "exactly ";
+            break;
+        }
+        if(item.threshold != 1) content += item.threshold + " are ";
+        else content += item.threshold + " is ";
+        if(item.mode == action.MODE_NOT) content += "not ";
+        content += getColorBox(map.states[item.test].color, true) +
+          " in a neighborhood of " + item.distance + " cells make this " +
+          getColorBox(map.states[item.new].color, true);
+        break;
+      case action.TARGET_ONE:
+        const other = item.other;
+        content += "(" + other.x + ", " + other.y + ") is ";
+        if(item.mode == action.MODE_NOT) content += "not ";
+        content += getColorBox(map.states[item.test].color, true) +
+          " make this " + getColorBox(map.states[item.new].color, true);
+        break;
+    }
+    entry.html($("<span></span>").addClass("item-wrapper").html(content));
     list.append(entry[0].cloneNode(true));
+  });
+
+  list.find(".list-group-item").click(function(event) {
+    removeAction(event)
   });
 }
 
-function getColorBox(color) {
+function getColorBox(color, inline = false) {
   const box = $("<span></span>").addClass("color-box")
     .css("background-color", new vec3(color).toRGBA());
-  return box;
+  if(inline) return box.addClass("color-box-inline")[0].outerHTML;
+  else return box;
 }
 
 export function draw() { // Gets context and calls renderer's draw()
