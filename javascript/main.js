@@ -1,6 +1,6 @@
 import * as renderer from "./modules/renderer.mjs";
 import {vec2, vec3} from "./modules/vectors.mjs";
-import {map, action} from "./modules/engine.mjs";
+import {map, action, start, stop, reset} from "./modules/engine.mjs";
 import * as ui from "./modules/ui.mjs";
 
 function init() {
@@ -37,6 +37,20 @@ function init() {
   $("#target-list .dropdown-item").click(function(event) {
     ui.setActionTarget(event);
   });
+
+  $("#engine-start").click(function(event) {
+    const target = $("#engine-gen").val();
+    const interval = $("#engine-interval").val();
+    $("#engine-start").prop("disabled", true);
+    start(target > 0 ? target : undefined, interval);
+  });
+
+  $("#engine-stop").click(function(event) {
+    $("#engine-start").prop("disabled", false);
+    stop();
+  });
+
+  $("#engine-reset").click(reset);
 
   $("#action-apply").click(ui.saveAction);
 

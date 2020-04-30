@@ -20,25 +20,27 @@ export function vec3(...args) {
 
 
   this.sub = function(other) {
-    add(other.neg());
+    this.add(other.neg());
 
     return this;
   }
 
   this.add = function(other) {
-    this.x = this.x + other.x;
-    this.y = this.y + other.y;
-    this.z = this.z + other.z;
+    this.x += other.x;
+    this.y += other.y;
+    this.z += other.z;
 
     return this;
   }
 
   this.neg = function() {
-    this.x = -this.x;
-    this.y = -this.y;
-    this.z = -this.z;
+    const res = new vec3(
+      -this.x,
+      -this.y,
+      -this.z
+    );
 
-    return this;
+    return res;
   }
 
   this.dot = function(other) {

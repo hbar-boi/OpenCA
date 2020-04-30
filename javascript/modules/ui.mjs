@@ -154,7 +154,7 @@ export function cellClick(event) {
   } else { // Clicked on another cell. Move selection
     setActive(mode, cell);
     if(mode) { // Update cell actions 'n shit
-      $("#current-cell").html("Current cell: (" + cell.x + ", " + cell.y + ")");
+      $("#current-cell").html("Active cell: (" + cell.x + ", " + cell.y + ")");
       $("#cell-menu").show();
 
       populateActionList($("#cell-actions"), cell);

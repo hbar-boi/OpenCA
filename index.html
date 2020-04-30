@@ -12,6 +12,41 @@
       <h1>Web Cellular Automata</h1>
     </header>
     <div class="container">
+      <div class="row mb-2">
+        <div class="col-lg-7">
+          <div class="row">
+            <div class="col-sm-3">
+              <label for="engine-gen">
+                Target generation
+              </label>
+            </div>
+            <div class="col-sm-3">
+              <label for="engine-interval">
+                Time interval (ms)
+              </label>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-sm-3">
+              <input type="number" min="1" value="1" class="w-100" id="engine-gen" />
+            </div>
+            <div class="col-sm-3">
+              <input type="number" min="1" value="1000" class="w-100" id="engine-interval" />
+            </div>
+            <div class="col">
+              <button type="button" class="btn btn-primary" id="engine-start">
+                Start
+              </button>
+              <button type="button" class="btn btn-primary" id="engine-stop">
+                Stop
+              </button>
+              <button type="button" class="btn btn-danger float-right" id="engine-reset">
+                Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="row">
         <div class="col-lg-7 mr-5">
           <canvas id="frame"></canvas>
