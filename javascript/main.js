@@ -41,20 +41,26 @@ function init() {
   $("#engine-start").click(function(event) {
     const target = $("#engine-gen").val();
     const interval = $("#engine-interval").val();
-    $("#engine-start").prop("disabled", true);
+    $("#engine-start, #engine-reset").prop("disabled", true);
+    $("#engine-stop").prop("disabled", false);
     start(target > 0 ? target : undefined, interval);
   });
 
   $("#engine-stop").click(function(event) {
-    $("#engine-start").prop("disabled", false);
+    $("#engine-start, #engine-reset").prop("disabled", false);
+    $("#engine-stop").prop("disabled", true);
     stop();
   });
 
   $("#engine-reset").click(reset);
 
-  $("#action-apply").click(ui.saveAction);
+  $("#action-apply").click(function() {
+    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", false);
+    ui.saveAction();
+  });
 
   $("#action-cancel").click(function() {
+    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", false);
     map.canvas.disabled = false;
     $("#main-menu").show();
     $("#action-menu").hide();
@@ -63,6 +69,7 @@ function init() {
   });
 
   $("#action-add").click(function() {
+    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
     map.canvas.disabled = true;
     $("#action-menu").show();
     $("#main-menu").hide()
@@ -122,9 +129,8 @@ function update() { // Update canvas size using grid data
   }); // Fill all cells
   for(let i = 0; i < x; i++) {
     let col = [];
-    for(let j = 0; j < y; j++) {
+    for(let j = 0; j < y; j++)
       col.push(JSON.parse(init)); // Make a shitton of deep copies
-    }
     map.data.push(col);
   }
   // Create default state - boring

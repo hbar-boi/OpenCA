@@ -39,14 +39,14 @@ h1 {
   padding-left: 0.5rem !important;
 }
 
-.list-group-item:hover .item-wrapper {
+.list-group-item .action-menu {
   display: none;
 }
 
-.list-group-item:hover:after {
-  content: "Remove";
-  display: block;
-  text-align: center;
-  color: #DC3545;
-  cursor: pointer;
+.list-group-item:hover .action-info {
+  display: none;
+}
+
+.list-group-item:hover .action-menu {
+  display: flex;
 }

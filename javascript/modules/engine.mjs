@@ -1,4 +1,4 @@
-import {vec2, vec3} from "./vectors.mjs";
+import {vec2, vec3, components} from "./vectors.mjs";
 import {draw} from "./ui.mjs";
 
 // Big ass object to store our CA data
@@ -42,6 +42,7 @@ let generation = 0;
 
 export function start(target = undefined, sleep = undefined) {
   map.canvas.disabled = true;
+  initial = map.data;
   draw();
   interval = setInterval(function() {
     advance();
@@ -60,6 +61,7 @@ export function step() {
 
 export function stop() {
   map.canvas.disabled = false;
+
   clearInterval(interval);
   draw();
 }
@@ -68,11 +70,7 @@ export function reset() {
   // Back from the beginning.
   generation = 0;
   // We may have some crap data from older simulations. Clean it up.
-  if(initial == undefined) initial = map.data;
-  else {
-    map.data = initial;
-    initial == undefined;
-  }
+  if(initial != undefined) map.data = initial;
   map.canvas.disabled = false;
   draw();
 }
@@ -124,14 +122,21 @@ function evalOne(cell, act, current) {
     current[cell.x][cell.y].state = act.new;
 }
 
+// This crap has to be redone
 function evalNeighbor(cell, act, current) {
   const boundaries = new vec2(act.distance, act.distance);
   const start = new vec2(cell).sub(boundaries);
+  start.x = (start.x >= 0) ? start.x : 0;
+  start.y = (start.y >= 0) ? start.y : 0;
   const end = new vec2(cell).add(boundaries);
+  end.x = (end.x < map.grid.x) ? end.x : map.grid.x - 1;
+  end.y = (end.y < map.grid.y) ? end.y : map.grid.y - 1;
   let count = 0;
-  for(let i = start.x; i <= end.x; i++) {
+  for(let i = start.x; i <= end.x ; i++) {
     for(let j = start.y; j <= end.y; j++) {
-      if(map.data[i][j].state == act.test) count++;
+      if(cell.x == i && cell.y == j) continue;
+      if(map.data[i][j].state == act.test)
+        count++;
     }
   }
   // Jeez - Variable operator needed asap

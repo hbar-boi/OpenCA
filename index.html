@@ -12,7 +12,7 @@
       <h1>Web Cellular Automata</h1>
     </header>
     <div class="container">
-      <div class="row mb-2">
+      <div class="row">
         <div class="col-lg-7">
           <div class="row">
             <div class="col-sm-3">
@@ -24,6 +24,9 @@
               <label for="engine-interval">
                 Time interval (ms)
               </label>
+            </div>
+            <div class="col">
+              <p id="engine-status"></p>
             </div>
           </div>
           <div class="row">
@@ -45,22 +48,27 @@
               </button>
             </div>
           </div>
+          <div class="row mt-3">
+            <div class="col">
+              <canvas id="frame"></canvas>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="row">
-        <div class="col-lg-7 mr-5">
-          <canvas id="frame"></canvas>
-        </div>
-        <div class="col-lg-4">
+        <div class="col-lg-4 ml-5">
           <div id="main-menu">
             <p class="h4 d-inline">Global settings</p>
-            <span class="float-right mt-1">Grid size</span>
             <div class="row mt-2">
               <div class="col-sm pr-1">
-                <input type="number" class="form-control" value="4" min="1" placeholder="Grid width" id="x-size" />
+                <label for="x-size">
+                  Grid width
+                </label>
+                <input type="number" class="form-control" value="4" min="1" id="x-size" />
               </div>
               <div class="col-sm pl-1">
-                <input type="number" class="form-control" value="4" min="1" placeholder="Grid height" id="y-size" />
+                <label for="y-size">
+                  Grid height
+                </label>
+                <input type="number" class="form-control" value="4" min="1" id="y-size" />
               </div>
             </div>
             <div class="row mt-2 mb-2">
@@ -74,7 +82,7 @@
                 <button type="button" class="btn btn-primary btn-block" id="update-grid">Update</button>
               </div>
             </div>
-            <span class="text-right d-block">Configure states</span>
+            <span class="d-block">Configure states</span>
             <div class="row mt-2">
               <div class="col-sm pr-1">
                 <button type="button"
@@ -97,13 +105,21 @@
             </div>
             <div class="row mt-1">
               <div class="col-sm pr-1 mt-1">
-                <input type="text" class="form-control" placeholder="Name" id="state-name" />
+                <label for="state-name">
+                  State name
+                </label>
+                <input type="text" class="form-control" id="state-name" />
               </div>
-              <div class="col-sm pl-1 mt-1 input-group" id="state-color">
-                <input type="text" class="form-control" />
-                <span class="input-group-append">
-                  <span class="input-group-text colorpicker-input-addon"><i></i></span>
-                </span>
+              <div class="col-sm pl-1 mt-1">
+                <label class="d-block" for="state-color">
+                  State color
+                </label>
+                <div class="input-group" id="state-color">
+                  <input type="text" class="form-control" />
+                  <span class="input-group-append">
+                    <span class="input-group-text colorpicker-input-addon"><i></i></span>
+                  </span>
+                </div>
               </div>
             </div>
             <div class="border-top my-3"></div>
@@ -133,7 +149,7 @@
             </div>
           </div>
           <div id="action-menu">
-            <span class="text-right d-block">Select action target and define neighbor size.</span>
+            <span class="d-block">Select action target</span>
             <div class="row mb-1 mt-1">
               <div class="col-sm pr-1">
                 <button type="button"
@@ -142,7 +158,7 @@
                 </button>
                 <div class="dropdown-menu" id="target-list">
                   <button class="dropdown-item" data="1">Single</button>
-                  <button class="dropdown-item" data="0">Neighbor</button>
+                  <button class="dropdown-item" data="0">Neighborhood</button>
                 </div>
               </div>
               <div class="col-sm pl-1 d-flex justify-content-center">
@@ -150,7 +166,7 @@
                 <input type="number" min="1" placeholder="Distance" id="target-distance" class="form-control" />
               </div>
             </div>
-            <span class="text-right d-block">Define test mode and parameters.</span>
+            <span class="d-block">Define test mode and threshold</span>
             <div class="row mb-1 mt-1">
               <div class="col-sm pr-1">
                 <button type="button"
@@ -168,7 +184,7 @@
                 <input type="number" min="0" disabled placeholder="Threshold" id="action-thresh" class="form-control" />
               </div>
             </div>
-            <span class="text-right d-block">Define test state and the new one for this cell.</span>
+            <span class="d-block">Choose test state and the new one for this cell.</span>
             <div class="row mb-2 mt-1">
               <div class="col-sm pr-1">
                 <button type="button"

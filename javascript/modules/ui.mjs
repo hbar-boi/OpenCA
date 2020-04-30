@@ -67,11 +67,23 @@ export function saveAction() {
 }
 
 export function removeAction(event) {
-  const id = event.target.getAttribute("action-id");
+  const id = event.target.parentElement.getAttribute("data");
   const focus = map.cell.focus;
   map.data[focus.x][focus.y].actions.splice(id, 1);
 
   update();
+}
+
+export function shareAction(event) {
+  const id = event.target.parentElement.getAttribute("data");
+  const cell = map.cell.focus;
+  const action = map.data[cell.x][cell.y].actions[id];
+  for(let i = 0; i < map.grid.x; i++) {
+    for(let j = 0; j < map.grid.y; j++) {
+      if(i == cell.x && j == cell.y) continue;
+      map.data[i][j].actions.push(action);
+    }
+  }
 }
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
@@ -85,14 +97,11 @@ export function saveState(id = undefined) { // Create new state or save edits
   };
 
   // State should have an unique name and color
-  if(name == "" || map.states.some(
-    e => new vec3(e.color).equals(state.color))
-  ) return;
+  if(name == "" || map.states.some((e, i) => (
+    new vec3(e.color).equals(state.color) && i != id))) return;
 
   // Create new state or update old one
-  if(id == undefined) {
-    map.states.push(state);
-  }
+  if(id == undefined) map.states.push(state);
   else map.states[id] = state;
   // Rebuild list
   update();
@@ -103,7 +112,7 @@ export function removeState(id) { // Rip
   if(map.states.length == 0) {
     map.states.push({
       "name": "Default",
-      "color": new vec3(255, 255, 255)
+      "color": colors.DEFAULT_COLOR
     });
   }
   // Rebuild list
@@ -252,8 +261,15 @@ function populateActionList(list, cell) { // Fills a bootstrap list
 
   const actions = map.data[cell.x][cell.y].actions;
   const entry = $("<li></li>").addClass("list-group-item");
+  const deleteButton = $("<button></button>")
+    .addClass("btn btn-danger action-delete").html("Delete");
+  const shareButton = $("<button></button>")
+    .addClass("btn btn-primary action-share").html("Apply to all");
+  const menu = $("<div></div>").append(shareButton).append(deleteButton)
+    .addClass("action-menu justify-content-around");
+  const info = $("<span></span>").addClass("action-info");
   actions.forEach(function(item, i) {
-    entry.attr("action-id", i);
+    menu.attr("data", i);
     let content = "If ";
     switch(item.target) {
       case action.TARGET_NEIGHBOR:
@@ -283,12 +299,18 @@ function populateActionList(list, cell) { // Fills a bootstrap list
           " make this " + getColorBox(map.states[item.new].color, true);
         break;
     }
-    entry.html($("<span></span>").addClass("item-wrapper").html(content));
+    entry.html(
+      info.append(content)
+    ).append(menu[0].cloneNode(true));
     list.append(entry[0].cloneNode(true));
   });
 
-  list.find(".list-group-item").click(function(event) {
+  list.find(".action-delete").click(function(event) {
     removeAction(event)
+  });
+
+  list.find(".action-share").click(function(event) {
+    shareAction(event);
   });
 }
 
