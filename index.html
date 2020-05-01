@@ -26,7 +26,9 @@
               </label>
             </div>
             <div class="col">
-              <p id="engine-status"></p>
+              <span id="engine-status">
+                Ready.
+              </span>
             </div>
           </div>
           <div class="row">
@@ -40,11 +42,11 @@
               <button type="button" class="btn btn-primary" id="engine-start">
                 Start
               </button>
-              <button type="button" class="btn btn-primary" id="engine-stop">
+              <button type="button" disabled class="btn btn-primary" id="engine-stop">
                 Stop
               </button>
-              <button type="button" class="btn btn-danger float-right" id="engine-reset">
-                Reset
+              <button type="button" disabled class="btn btn-danger float-right" id="engine-reset">
+                Reset to last start
               </button>
             </div>
           </div>

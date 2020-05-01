@@ -54,7 +54,7 @@ export function saveAction() {
   } else entry.other = map.cell.target;
 
   const current = map.cell.focus;
-  map.data[current.x][current.y].actions.push(entry);
+  map.data.actions[current.x][current.y].push(entry);
 
   populateActionList($("#cell-actions"), map.cell.focus);
 
@@ -69,7 +69,7 @@ export function saveAction() {
 export function removeAction(event) {
   const id = event.target.parentElement.getAttribute("data");
   const focus = map.cell.focus;
-  map.data[focus.x][focus.y].actions.splice(id, 1);
+  map.data.actions[focus.x][focus.y].splice(id, 1);
 
   update();
 }
@@ -77,11 +77,11 @@ export function removeAction(event) {
 export function shareAction(event) {
   const id = event.target.parentElement.getAttribute("data");
   const cell = map.cell.focus;
-  const action = map.data[cell.x][cell.y].actions[id];
+  const action = map.data.actions[cell.x][cell.y][id];
   for(let i = 0; i < map.grid.x; i++) {
     for(let j = 0; j < map.grid.y; j++) {
       if(i == cell.x && j == cell.y) continue;
-      map.data[i][j].actions.push(action);
+      map.data.actions[i][j].push(action);
     }
   }
 }
@@ -223,7 +223,7 @@ export function update() { // Reset UI after some major change
   populateStateList($("#state-set"), "set-state-entry");
   $(".set-state-entry").click(function(event) {
     const cell = map.cell.focus;
-    map.data[cell.x][cell.y].state = event.target.getAttribute("data");
+    map.data.states[cell.x][cell.y] = event.target.getAttribute("data");
   });
 
   populateStateList($("#test-state-list"), "test-state-entry");
@@ -259,7 +259,7 @@ function populateStateList(list, identifier) { // Fills a bootstrap dropdown
 function populateActionList(list, cell) { // Fills a bootstrap list
   list.html("");
 
-  const actions = map.data[cell.x][cell.y].actions;
+  const actions = map.data.actions[cell.x][cell.y];
   const entry = $("<li></li>").addClass("list-group-item");
   const deleteButton = $("<button></button>")
     .addClass("btn btn-danger action-delete").html("Delete");
@@ -300,7 +300,7 @@ function populateActionList(list, cell) { // Fills a bootstrap list
         break;
     }
     entry.html(
-      info.append(content)
+      info.html(content)
     ).append(menu[0].cloneNode(true));
     list.append(entry[0].cloneNode(true));
   });

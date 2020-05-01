@@ -1,12 +1,6 @@
 
 // Need some way of passing vectors around
 
-export const components = {
-  "COMPONENT_X": 0,
-  "COMPONENT_Y": 1,
-  "COMPONENT_Z": 2
-};
-
 export function vec2(...args) {
   if(args.length > 1) return new vec3(args[0], args[1], 0);
   else return new vec3(args[0].x, args[0].y, 0);

@@ -29,7 +29,8 @@ function parallels(ctx, space, length, num, dir) {
 }
 
 // Draw a single cell, if no color is specified use the cell's
-function cell(ctx, x, y, map, color = map.states[map.data[x][y].state].color) {
+function cell(ctx, x, y, map, color = undefined) {
+  if(color == undefined) color = map.states[map.data.states[x][y]].color;
   const box = (map.cell.margin * 2) + map.cell.size;
   ctx.beginPath();
   ctx.rect(

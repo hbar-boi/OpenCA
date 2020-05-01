@@ -1,4 +1,4 @@
-import {vec2, vec3, components} from "./vectors.mjs";
+import {vec2, vec3} from "./vectors.mjs";
 import {draw} from "./ui.mjs";
 
 // Big ass object to store our CA data
@@ -22,7 +22,10 @@ export const map = {
     "target": undefined
   },
   "states": [],
-  "data": []
+  "data": {
+    "states": undefined,
+    "actions": undefined
+  }
 };
 
 // Enum for action configuration
@@ -36,55 +39,74 @@ export const action = {
   "MODE_MORE": 3
 }
 
-let interval = undefined;
 let initial = undefined;
+let interval = undefined;
 let generation = 0;
 
-export function start(target = undefined, sleep = undefined) {
+export function start(target = undefined, sleep = 0) {
   map.canvas.disabled = true;
-  initial = map.data;
-  draw();
+  // Save a copy of the starting states for reset.
+  initial = JSON.parse(JSON.stringify(map.data.states));
   interval = setInterval(function() {
-    advance();
+    const delta = advance();
     generation++;
-    if(sleep > 0) draw();
-    if(target != undefined && generation >= target)
+    if(sleep > 0) draw(); // No need to draw if immediately overwritten...
+    if(target != undefined && generation >= target) {
+      // Done with this simulation. Stop everything.
       clearInterval(interval);
-  }, sleep == undefined ? 0 : sleep);
+      setStatus("Done. ", true);
+      $("#engine-status").html("Done. Generation: " + generation);
+      draw();
+    } else setStatus("Running. Delta: " + delta + " (ms), ", true);
+  }, sleep);
 }
 
+// Step one generation
 export function step() {
   advance();
   generation++;
   draw();
 }
 
+// Stop engine
 export function stop() {
   map.canvas.disabled = false;
 
   clearInterval(interval);
   draw();
+  setStatus("Stopped. ", true);
 }
 
 export function reset() {
   // Back from the beginning.
   generation = 0;
   // We may have some crap data from older simulations. Clean it up.
-  if(initial != undefined) map.data = initial;
+  if(initial != undefined) {
+    map.data.states = initial;
+    initial = undefined;
+  }
   map.canvas.disabled = false;
   draw();
+  setStatus("Ready.", false);
+}
+
+function setStatus(before, gen) {
+  const container = $("#engine-status");
+  container.html(before);
+  if(gen) container.append("Generation: " + generation);
 }
 
 // STRATEGY. Since we want to compare ALL cells at the same time
 // we may have a problem: what if a cell that was red has been turned
 // into a white one by an action before the one we are evaluating right now?
-// The newer action wouldn't fire and that ain't good. To fix this we just make
+// The newer action mightn't fire and that ain't good. To fix this we just make
 // a "working" copy of our cell data and change THAT one. All comparisons will
 // be made on the original one (map.data) while the state changes happen on the
 // copy. At the end we just overwrite the working one on the old data.
 function advance() {
+  const start = new Date().getTime();
   // This will be our working copy. We could just as well pass the states only.
-  const current = JSON.parse(JSON.stringify(map.data)); // Make a deep copy
+  const current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
   for(let i = 0; i < map.grid.x; i++) {
     for(let j = 0; j < map.grid.y; j++) {
       // Just iterate over all cells and evaluate one by one.
@@ -92,13 +114,15 @@ function advance() {
     }
   }
   // All is done. Just make the new states drawable and move on.
-  map.data = current;
-  draw();
+  map.data.states = current;
+  const end = new Date().getTime();
+  // Return time elapsed while evaluating this generaiton.
+  return (end - start);
 }
 
 function evalCellActions(cell, current) {
   // Actions are actions: don't care if we get them from the original data.
-  const actions = map.data[cell.x][cell.y].actions;
+  const actions = map.data.actions[cell.x][cell.y];
   actions.forEach(function(item, i) {
     const mode = item.mode;
     switch(item.target) { // Identify action target
@@ -114,35 +138,49 @@ function evalCellActions(cell, current) {
 
 function evalOne(cell, act, current) {
   // The trick is here: compare the state from map.data!!!
-  const other = map.data[act.other.x][act.other.y].state;
+  const other = map.data.states[act.other.x][act.other.y];
   // This is easy. Just select our mode and
-  if((act.mode == action.MODE_IS && other == act.test) ||
-    (act.mode == action.MODE_NOT && other != act.test))
+  if(compare(act.mode, other, act.test))
     // And change states in current!!! Hopefully this works
-    current[cell.x][cell.y].state = act.new;
+    current[cell.x][cell.y] = act.new;
 }
 
-// This crap has to be redone
 function evalNeighbor(cell, act, current) {
   const boundaries = new vec2(act.distance, act.distance);
+
+  // Calculate the boundaries of this cell's neighborhood
+  // If they exceed our grid's limits cap them.
   const start = new vec2(cell).sub(boundaries);
   start.x = (start.x >= 0) ? start.x : 0;
   start.y = (start.y >= 0) ? start.y : 0;
   const end = new vec2(cell).add(boundaries);
   end.x = (end.x < map.grid.x) ? end.x : map.grid.x - 1;
   end.y = (end.y < map.grid.y) ? end.y : map.grid.y - 1;
+
+  // Check neighboirng cells and increase count when finding a matching one
   let count = 0;
   for(let i = start.x; i <= end.x ; i++) {
     for(let j = start.y; j <= end.y; j++) {
       if(cell.x == i && cell.y == j) continue;
-      if(map.data[i][j].state == act.test)
+      if(map.data.states[i][j] == act.test)
         count++;
     }
   }
-  // Jeez - Variable operator needed asap
-  if((act.mode == action.MODE_IS && count == act.threshold) ||
-    (act.mode == action.MODE_NOT && count != act.threshold) ||
-    (act.mode == action.MODE_LESS && count < act.threshold) ||
-    (act.mode == action.MODE_MORE && count > act.threshold))
-    current[cell.x][cell.y].state = act.new;
+
+  if(compare(act.mode, count, act.threshold))
+    current[cell.x][cell.y] = act.new;
+}
+
+// Variable operator, not bad...
+function compare(mode, first, second) {
+  switch(mode) {
+    case action.MODE_IS:
+      return first == second;
+    case action.MODE_NOT:
+      return first != second;
+    case action.MODE_LESS:
+      return first < second;
+    case action.MODE_MORE:
+      return first > second;
+  }
 }

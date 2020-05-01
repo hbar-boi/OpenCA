@@ -22,23 +22,21 @@ function init() {
     format: "rgb"
   });
 
-  $("#add-state").click(function() {
-    ui.saveState(undefined)
-  });
+  $("#add-state").click(() => ui.saveState(undefined));
 
-  $("#edit-state").click(function(event) {
+  $("#edit-state").click((event) =>
     ui.saveState($("#state-list").attr("active"))
-  });
+  );
 
-  $("#remove-state").click(function(event) {
+  $("#remove-state").click((event) =>
     ui.removeState($("#state-list").attr("active"))
-  });
+  );
 
-  $("#target-list .dropdown-item").click(function(event) {
-    ui.setActionTarget(event);
-  });
+  $("#target-list .dropdown-item").click((event) =>
+    ui.setActionTarget(event)
+  );
 
-  $("#engine-start").click(function(event) {
+  $("#engine-start").click((event) => {
     const target = $("#engine-gen").val();
     const interval = $("#engine-interval").val();
     $("#engine-start, #engine-reset").prop("disabled", true);
@@ -46,21 +44,24 @@ function init() {
     start(target > 0 ? target : undefined, interval);
   });
 
-  $("#engine-stop").click(function(event) {
+  $("#engine-stop").click((event) => {
     $("#engine-start, #engine-reset").prop("disabled", false);
     $("#engine-stop").prop("disabled", true);
     stop();
   });
 
-  $("#engine-reset").click(reset);
+  $("#engine-reset").click(() => {
+    $("#engine-reset").prop("disabled", true);
+    reset();
+  });
 
-  $("#action-apply").click(function() {
-    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", false);
+  $("#action-apply").click(() => {
+    $("#engine-start").prop("disabled", false);
     ui.saveAction();
   });
 
-  $("#action-cancel").click(function() {
-    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", false);
+  $("#action-cancel").click(() => {
+    $("#engine-start").prop("disabled", false);
     map.canvas.disabled = false;
     $("#main-menu").show();
     $("#action-menu").hide();
@@ -68,7 +69,7 @@ function init() {
     ui.draw();
   });
 
-  $("#action-add").click(function() {
+  $("#action-add").click(() => {
     $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
     map.canvas.disabled = true;
     $("#action-menu").show();
@@ -121,18 +122,11 @@ function update() { // Update canvas size using grid data
   map.cell.focus = undefined;
   map.cell.target = undefined;
 
-  // Fill data array with blank objects
-  map.data = [];
-  const init = JSON.stringify({
-    "state": 0,
-    "actions": []
-  }); // Fill all cells
-  for(let i = 0; i < x; i++) {
-    let col = [];
-    for(let j = 0; j < y; j++)
-      col.push(JSON.parse(init)); // Make a shitton of deep copies
-    map.data.push(col);
-  }
+  // Reset data array
+  map.data.actions = Array(+x).fill().map(() => Array(+y)
+    .fill().map(() => Array(0)));
+  map.data.states = Array(+x).fill().map(() => Array(+y).fill(0));
+
   // Create default state - boring
   map.states = [{
     "name": "Default",
