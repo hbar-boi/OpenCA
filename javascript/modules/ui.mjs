@@ -1,6 +1,7 @@
 import {vec2, vec3} from "./vectors.mjs";
-import {draw as _draw} from "./renderer.mjs";
-import {map, action} from "./engine.mjs";
+import {draw as render} from "./renderer.mjs";
+import {map, action, start as engineStart,
+  stop as engineStop, reset as engineReset} from "./engine.mjs";
 
 // Handle all UI stuff
 
@@ -15,10 +16,105 @@ export const colors = {
   "LINE_COLOR": new vec3(161, 161, 161)
 };
 
+export function init() {
+  // First thing first: bind all events
+  $("#frame").on("mousemove mouseout", (e) => {
+    if(!map.canvas.disabled) cellHover(e)
+  });
+
+  $("#frame").click((e) => {
+    if(!map.canvas.disabled) cellClick(e)
+  });
+
+  $("#grid-display").click(() => draw());
+
+  // This is needed to make Bootstrap dropdowns work as selects
+  $(".normal-list").on("click", ".dropdown-item", (e) => {
+    const active = +e.target.getAttribute("data");
+    e.target.parentElement.setAttribute("active", active);
+  });
+
+  // State
+  $("#add-state").click(() => saveState(undefined));
+
+  $("#edit-state").click(
+    () => saveState($("#state-list").attr("active")));
+
+  $("#remove-state").click((e) =>
+    removeState($("#state-list").attr("active")));
+
+  $("#state-set").on("click", ".set-state-entry", (e) => {
+      const cell = map.cell.focus;
+      map.data.states[cell.x][cell.y] = e.target.getAttribute("data");
+  });
+
+  $("#state-list").on("click", ".edit-state-entry", (e) => editState(e));
+
+  // Create default state
+  map.states = [{
+    "name": "Default",
+    "color": colors.DEFAULT_COLOR
+  }];
+
+  // Engine
+  $("#engine-start").click(() => startEngine());
+  $("#engine-stop").click(() => stopEngine());
+  $("#engine-reset").click(() => resetEngine());
+
+  // Action
+  $("#target-list .dropdown-item").click((e) => setActionTarget(e));
+  $("#action-apply").click(() => saveAction());
+  $("#action-cancel").click(() => cancelAction());
+  $("#action-add").click(() => addAction());
+
+  $("#cell-actions").on("click", ".action-delete", (e) => removeAction(e));
+  $("#cell-actions").on("click", ".action-share", (e) => shareAction(e));
+}
+
+// ================= UI STUFF FOR ENGINE OPERATION =======================
+
+export function resetEngine() {
+  $("#engine-reset").prop("disabled", true);
+  engineReset();
+}
+
+export function stopEngine() {
+  $("#engine-start, #engine-reset").prop("disabled", false);
+  $("#engine-stop").prop("disabled", true);
+  engineStop();
+}
+
+export function startEngine() {
+  const target = $("#engine-gen").val();
+  const interval = $("#engine-interval").val();
+  $("#engine-start, #engine-reset").prop("disabled", true);
+  $("#engine-stop").prop("disabled", false);
+  engineStart(target > 0 ? target : undefined, interval);
+}
+
 // ================= UI STUFF FOR WORKING ON ACTIONS =====================
 
-export function setActionTarget(event) {
-  const target = +event.target.getAttribute("data");
+function addAction() {
+  $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
+  map.canvas.disabled = true;
+  $("#action-menu").show();
+  $("#main-menu").hide()
+
+  draw();
+}
+
+function cancelAction(e) {
+  $("#engine-start").prop("disabled", false);
+  map.canvas.disabled = false;
+  $("#main-menu").show();
+  $("#action-menu").hide();
+  map.cell.target = undefined;
+
+  draw();
+}
+
+function setActionTarget(e) {
+  const target = +e.target.getAttribute("data");
   switch(target) {
     case action.TARGET_ONE:
       map.canvas.disabled = false;
@@ -39,7 +135,7 @@ export function setActionTarget(event) {
   draw();
 }
 
-export function saveAction() {
+function saveAction() {
   const target = +$("#target-list").attr("active");
   const mode = +$("#mode-list").attr("active");
   const entry = {
@@ -48,6 +144,7 @@ export function saveAction() {
     "test": +$("#test-state-list").attr("active"),
     "new": +$("#new-state-list").attr("active")
   };
+
   if(target == action.TARGET_NEIGHBOR) {
     entry.distance = +$("#target-distance").val();
     entry.threshold = +$("#action-thresh").val();
@@ -56,26 +153,27 @@ export function saveAction() {
   const current = map.cell.focus;
   map.data.actions[current.x][current.y].push(entry);
 
-  populateActionList($("#cell-actions"), map.cell.focus);
+  fillActionList();
 
   map.canvas.disabled = false;
   $("#main-menu").show();
   $("#action-menu").hide();
   map.cell.target = undefined;
+  $("#engine-start").prop("disabled", false);
 
   update();
 }
 
-export function removeAction(event) {
-  const id = event.target.parentElement.getAttribute("data");
+function removeAction(e) {
+  const id = e.target.parentElement.getAttribute("data");
   const focus = map.cell.focus;
   map.data.actions[focus.x][focus.y].splice(id, 1);
 
   update();
 }
 
-export function shareAction(event) {
-  const id = event.target.parentElement.getAttribute("data");
+function shareAction(e) {
+  const id = e.target.parentElement.getAttribute("data");
   const cell = map.cell.focus;
   const action = map.data.actions[cell.x][cell.y][id];
   for(let i = 0; i < map.grid.x; i++) {
@@ -86,180 +184,11 @@ export function shareAction(event) {
   }
 }
 
-// ================= UI STUFF FOR WORKING ON STATES =====================
-
-export function saveState(id = undefined) { // Create new state or save edits
-  const name = $("#state-name").val();
-  const color = $("#state-color").colorpicker("getValue").match(/\d+/g);
-  const state = {
-    "name": name,
-    "color": new vec3(color[0], color[1], color[2])
-  };
-
-  // State should have an unique name and color
-  if(name == "" || map.states.some((e, i) => (
-    new vec3(e.color).equals(state.color) && i != id))) return;
-
-  // Create new state or update old one
-  if(id == undefined) map.states.push(state);
-  else map.states[id] = state;
-  // Rebuild list
-  update();
-}
-
-export function removeState(id) { // Rip
-  map.states.splice(id, 1);
-  if(map.states.length == 0) {
-    map.states.push({
-      "name": "Default",
-      "color": colors.DEFAULT_COLOR
-    });
-  }
-  // Rebuild list
-  update();
-}
-
-export function editState(event) { // Change UI to allow editing of state params
-  const id = event.target.getAttribute("data");
-  const state = map.states[id];
-  const color = new vec3(state.color);
-  // Prepare current state data
-  $("#state-list").attr("active", id);
-  $("#state-name").val(state.name);
-  $("#state-color").colorpicker("setValue", color.toRGBA());
-
-  $("#edit-state").show();
-  $("#remove-state").show();
-  $("#add-state").hide();
-}
-
-// =============== UI STUFF FOR CELL INTERACTIONS ===================
-
-export function cellClick(event) {
-  // Need a way to tell if we're working on the focus cell
-  // or the target cell. This is determined by mode.
-  // This way we can use the same function to select two different cells
-  // in different moments.
-  const setActive = function(which, set) {
-    // which = true -> working on focus cell.
-    // which = false -> working on target cell.
-    if(which) map.cell.focus = set;
-    else map.cell.target = set;
-  }
-
-  const mode = $("#main-menu").is(":visible");
-  const active = mode ? map.cell.focus : map.cell.target;
-  const cell = eventCell(event);
-
-  if(cell.equals(active)) { // Clicked on active cell. Remove selection
-    setActive(mode, undefined);
-    if(mode) { // If we are in focus mode do UI stuff for focus mode
-      $("#cell-actions").html("");
-      $("#current-cell").html("Select cell");
-      $("#cell-menu").hide();
-    } else { // Same for target mode
-      $("#target-cell").html("Select target");
-    }
-  } else { // Clicked on another cell. Move selection
-    setActive(mode, cell);
-    if(mode) { // Update cell actions 'n shit
-      $("#current-cell").html("Active cell: (" + cell.x + ", " + cell.y + ")");
-      $("#cell-menu").show();
-
-      populateActionList($("#cell-actions"), cell);
-    } else { // Update target stuff
-      $("#target-cell").html("Target is (" + cell.x + ", " + cell.y + ")");
-    }
-  }
-
-  draw();
-}
-
-export function cellHover(event) { // Cell with cursor on changes color
-  const cell = eventCell(event);
-  const hover = map.cell.hover;
-  switch(event.type) {
-    case "mousemove":
-      if(!cell.equals(hover)) {
-        map.cell.hover = cell;
-        return;
-      }
-      break;
-    case "mouseout":
-      map.cell.hover = undefined; // Reset object
-      break;
-  }
-
-  draw();
-}
-
-function eventCell(event) { // Returns a vec2 containing indices for cell
-  const rel = new vec2( // Translate to top-left of canvas
-    event.pageX - map.canvas.left,
-    event.pageY - map.canvas.top
-  );
-  const box = map.cell.size + (map.cell.margin * 2);
-  return new vec2( // Just divide and clamp to get index. Easy as that.
-    Math.min(map.grid.x - 1, Math.max(0, Math.floor(rel.y / box))),
-    Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box)))
-  );
-}
-
-// ================== RANDOM UTILS FOR UI =============================
-
-export function update() { // Reset UI after some major change
-  $("#state-name").val("");
-  $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
-
-  $("#edit-state").hide();
-  $("#remove-state").hide();
-  $("#add-state").show();
-  // Rebuild lists containing changed data
-  populateStateList($("#state-list"), "edit-state-entry");
-  $(".edit-state-entry").click(function(event) {
-    editState(event);
-  });
-
-  populateStateList($("#state-set"), "set-state-entry");
-  $(".set-state-entry").click(function(event) {
-    const cell = map.cell.focus;
-    map.data.states[cell.x][cell.y] = event.target.getAttribute("data");
-  });
-
-  populateStateList($("#test-state-list"), "test-state-entry");
-  populateStateList($("#new-state-list"), "new-state-list");
-
-  if(map.cell.focus != undefined)
-    populateActionList($("#cell-actions"), map.cell.focus);
-
-  // This is needed to make Bootstrap dropdowns work as selects
-  $("#state-list, #mode-list, #target-list, #test-state-list, #new-state-list")
-    .find(".dropdown-item").click(function(event) {
-    const active = +event.target.getAttribute("data");
-    event.target.parentElement.setAttribute("active", active);
-  });
-
-  draw();
-}
-
-function populateStateList(list, identifier) { // Fills a bootstrap dropdown
-  list.html("");
-
-  const entry = $("<button></button>");
-  entry.addClass("dropdown-item d-flex justify-content-between " + identifier);
-
-  map.states.forEach(function(item, i) {
-    entry.attr("data", i);
-    entry.html(item.name);
-    entry.append(getColorBox(item.color));
-    list.append(entry[0].cloneNode(true));
-  });
-}
-
-function populateActionList(list, cell) { // Fills a bootstrap list
-  list.html("");
-
+function fillActionList() {
+  const cell = map.cell.focus;
   const actions = map.data.actions[cell.x][cell.y];
+
+  const list = $("#cell-actions").html("");
   const entry = $("<li></li>").addClass("list-group-item");
   const deleteButton = $("<button></button>")
     .addClass("btn btn-danger action-delete").html("Delete");
@@ -268,7 +197,8 @@ function populateActionList(list, cell) { // Fills a bootstrap list
   const menu = $("<div></div>").append(shareButton).append(deleteButton)
     .addClass("action-menu justify-content-around");
   const info = $("<span></span>").addClass("action-info");
-  actions.forEach(function(item, i) {
+
+  actions.forEach((item, i) => {
     menu.attr("data", i);
     let content = "If ";
     switch(item.target) {
@@ -299,18 +229,158 @@ function populateActionList(list, cell) { // Fills a bootstrap list
           " make this " + getColorBox(map.states[item.new].color, true);
         break;
     }
-    entry.html(
-      info.html(content)
-    ).append(menu[0].cloneNode(true));
+    entry.html(info.html(content)).append(menu[0].cloneNode(true));
     list.append(entry[0].cloneNode(true));
   });
+}
 
-  list.find(".action-delete").click(function(event) {
-    removeAction(event)
-  });
+// ================= UI STUFF FOR WORKING ON STATES =====================
 
-  list.find(".action-share").click(function(event) {
-    shareAction(event);
+function saveState(id = undefined) { // Create new state or save edits
+  const name = $("#state-name").val();
+  const color = $("#state-color").colorpicker("getValue").match(/\d+/g);
+  const state = {
+    "name": name,
+    "color": new vec3(color[0], color[1], color[2])
+  };
+
+  // State should have an unique name and color
+  if(name == "" || map.states.some((e, i) => (
+    new vec3(e.color).equals(state.color) && i != id))) return;
+
+  // Create new state or update old one
+  if(id == undefined) map.states.push(state);
+  else map.states[id] = state;
+  // Rebuild list
+  update();
+}
+
+function removeState(id) { // Rip
+  map.states.splice(id, 1);
+  if(map.states.length == 0) {
+    map.states.push({
+      "name": "Default",
+      "color": colors.DEFAULT_COLOR
+    });
+  }
+  // Rebuild list
+  update();
+}
+
+function editState(e) { // Change UI to allow editing of state params
+  const id = e.target.getAttribute("data");
+  const state = map.states[id];
+  const color = new vec3(state.color);
+  // Prepare current state data
+  $("#state-list").attr("active", id);
+  $("#state-name").val(state.name);
+  $("#state-color").colorpicker("setValue", color.toRGBA());
+
+  $("#edit-state").show();
+  $("#remove-state").show();
+  $("#add-state").hide();
+}
+
+// =============== UI STUFF FOR CELL INTERACTIONS ===================
+
+function cellClick(e) {
+  // Need a way to tell if we're working on the focus cell
+  // or the target cell. This is determined by mode.
+  // This way we can use the same function to select two different cells
+  // in different moments.
+  const setActive = function(which, set) {
+    // which = true -> working on focus cell.
+    // which = false -> working on target cell.
+    if(which) map.cell.focus = set;
+    else map.cell.target = set;
+  }
+
+  const mode = $("#main-menu").is(":visible");
+  const active = mode ? map.cell.focus : map.cell.target;
+  const cell = eventCell(e);
+
+  if(cell.equals(active)) { // Clicked on active cell. Remove selection
+    setActive(mode, undefined);
+    if(mode) { // If we are in focus mode do UI stuff for focus mode
+      $("#cell-actions").html("");
+      $("#current-cell").html("Select cell");
+      $("#cell-menu").hide();
+    } else $("#target-cell").html("Select target");
+  } else { // Clicked on another cell. Move selection
+    setActive(mode, cell);
+    if(mode) { // Update cell actions 'n shit
+      $("#current-cell").html("Active cell: (" + cell.x + ", " + cell.y + ")");
+      $("#cell-menu").show();
+
+      fillActionList($("#cell-actions"), cell);
+    } else $("#target-cell").html("Target is (" + cell.x + ", " + cell.y + ")");
+  }
+
+  draw();
+}
+
+function cellHover(e) { // Cell with cursor on changes color
+  const cell = eventCell(e);
+  const hover = map.cell.hover;
+  switch(e.type) {
+    case "mousemove":
+      if(!cell.equals(hover)) {
+        map.cell.hover = cell;
+        return;
+      }
+      break;
+    case "mouseout":
+      map.cell.hover = undefined; // Reset object
+      break;
+  }
+
+  draw();
+}
+
+function eventCell(e) { // Returns a vec2 containing indices for cell
+  const rel = new vec2( // Translate to top-left of canvas
+    e.pageX - map.canvas.left,
+    e.pageY - map.canvas.top
+  );
+  const box = map.cell.size + (map.cell.margin * 2);
+  return new vec2( // Just divide and clamp to get index. Easy as that.
+    Math.min(map.grid.x - 1, Math.max(0, Math.floor(rel.y / box))),
+    Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box)))
+  );
+}
+
+// ================== RANDOM UTILS FOR UI =============================
+
+export function update() { // Reset UI after some major change
+  $("#state-name").val("");
+  $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
+
+  $("#edit-state").hide();
+  $("#remove-state").hide();
+  $("#add-state").show();
+  // Rebuild lists containing changed data
+  fillStateList($("#state-list"), "edit-state-entry");
+  fillStateList($("#state-set"), "set-state-entry");
+
+  fillStateList($("#test-state-list"), "test-state-entry");
+  fillStateList($("#new-state-list"), "new-state-list");
+
+  if(map.cell.focus != undefined) fillActionList();
+
+  draw();
+}
+
+function fillStateList(list, identifier) { // Fills a bootstrap dropdown
+  list.html("");
+
+  const entry = $("<button></button>");
+  entry.addClass("dropdown-item d-flex justify-content-between " + identifier);
+
+  map.states.forEach(function(item, i) {
+    entry.attr("data", i);
+    entry.html(item.name);
+    entry.append(getColorBox(item.color));
+    list.append(entry[0].cloneNode(true));
   });
 }
 
@@ -318,12 +388,12 @@ function getColorBox(color, inline = false) {
   const box = $("<span></span>").addClass("color-box")
     .css("background-color", new vec3(color).toRGBA());
   if(inline) return box.addClass("color-box-inline")[0].outerHTML;
-  else return box;
+  return box;
 }
 
 export function draw() { // Gets context and calls renderer's draw()
   const grid = $("#grid-display").prop("checked");
   const ctx = $("#frame")[0].getContext("2d");
 
-  _draw(ctx, map, grid);
+  render(ctx, map, grid);
 }

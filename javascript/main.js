@@ -1,83 +1,25 @@
-import * as renderer from "./modules/renderer.mjs";
-import {vec2, vec3} from "./modules/vectors.mjs";
-import {map, action, start, stop, reset} from "./modules/engine.mjs";
-import * as ui from "./modules/ui.mjs";
+import {map} from "./modules/engine.mjs";
+import {colors, init as initUI, update as updateUI} from "./modules/ui.mjs";
 
 function init() {
-  const canvas = $("#frame");
-  // First thing first: bind all events
-  canvas.on("mousemove mouseout", function(event) {
-    if(!map.canvas.disabled) ui.cellHover(event)
-  });
-
-  canvas.click(function(event) {
-    if(!map.canvas.disabled) ui.cellClick(event)
-  });
-
-  $("#update-grid").click(update);
-  $("#grid-display").click(ui.draw);
-
   $("#state-color").colorpicker({
     useAlpha: false,
     format: "rgb"
   });
 
-  $("#add-state").click(() => ui.saveState(undefined));
+  $("#update-grid").click(() => update());
+  $(window).resize(() => resize());
 
-  $("#edit-state").click((event) =>
-    ui.saveState($("#state-list").attr("active"))
-  );
-
-  $("#remove-state").click((event) =>
-    ui.removeState($("#state-list").attr("active"))
-  );
-
-  $("#target-list .dropdown-item").click((event) =>
-    ui.setActionTarget(event)
-  );
-
-  $("#engine-start").click((event) => {
-    const target = $("#engine-gen").val();
-    const interval = $("#engine-interval").val();
-    $("#engine-start, #engine-reset").prop("disabled", true);
-    $("#engine-stop").prop("disabled", false);
-    start(target > 0 ? target : undefined, interval);
-  });
-
-  $("#engine-stop").click((event) => {
-    $("#engine-start, #engine-reset").prop("disabled", false);
-    $("#engine-stop").prop("disabled", true);
-    stop();
-  });
-
-  $("#engine-reset").click(() => {
-    $("#engine-reset").prop("disabled", true);
-    reset();
-  });
-
-  $("#action-apply").click(() => {
-    $("#engine-start").prop("disabled", false);
-    ui.saveAction();
-  });
-
-  $("#action-cancel").click(() => {
-    $("#engine-start").prop("disabled", false);
-    map.canvas.disabled = false;
-    $("#main-menu").show();
-    $("#action-menu").hide();
-    map.cell.target = undefined;
-    ui.draw();
-  });
-
-  $("#action-add").click(() => {
-    $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
-    map.canvas.disabled = true;
-    $("#action-menu").show();
-    $("#main-menu").hide()
-    ui.draw();
-  });
-
+  initUI();
+  
+  resize();
   update();
+}
+
+function resize() {
+  const rect = $("#frame")[0].getBoundingClientRect();
+  map.canvas.top = rect.top;
+  map.canvas.left = rect.left;
 }
 
 function update() { // Update canvas size using grid data
@@ -109,10 +51,6 @@ function update() { // Update canvas size using grid data
   map.canvas.height = canvas[0].height = Math.round(
     canvas[0].offsetWidth * ratio * window.devicePixelRatio);
 
-  const rect = canvas[0].getBoundingClientRect();
-  map.canvas.top = rect.top;
-  map.canvas.left = rect.left;
-
   // Cells gunna take 95% of canvas
   map.cell.size = (canvas[0].width * 0.95) / y;
   // The remaining 5% are margins and grid lines
@@ -127,14 +65,7 @@ function update() { // Update canvas size using grid data
     .fill().map(() => Array(0)));
   map.data.states = Array(+x).fill().map(() => Array(+y).fill(0));
 
-  // Create default state - boring
-  map.states = [{
-    "name": "Default",
-    "color": ui.colors.DEFAULT_COLOR
-  }];
-
-  ui.update();
-  ui.draw();
+  updateUI();
 }
 
 $(document).ready(init);

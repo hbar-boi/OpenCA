@@ -15,7 +15,10 @@
     <div class="container">
       <div class="row mt-5 mb-4">
         <div class="col-lg-12">
-          <h1>OpenCA</h1>
+          <h1>
+            <span>OpenCA</span>
+            <small class="text-muted">2D cellular automata simulator</small>
+          </h1>
         </div>
       </div>
       <div class="row">
@@ -97,7 +100,7 @@
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                   Edit state
                 </button>
-                <div class="dropdown-menu" id="state-list"></div>
+                <div class="dropdown-menu normal-list" id="state-list"></div>
               </div>
               <div class="col-sm pl-1 d-flex justify-content-between">
                 <button type="button" class="btn btn-block new btn-primary" id="add-state">
@@ -164,7 +167,7 @@
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                   Target
                 </button>
-                <div class="dropdown-menu" id="target-list">
+                <div class="dropdown-menu normal-list" id="target-list">
                   <button class="dropdown-item" data="1">Single</button>
                   <button class="dropdown-item" data="0">Neighborhood</button>
                 </div>
@@ -181,7 +184,7 @@
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                   Mode
                 </button>
-                <div class="dropdown-menu" id="mode-list">
+                <div class="dropdown-menu normal-list" id="mode-list">
                   <button data="0" class="dropdown-item">Equals to</button>
                   <button data="1" class="dropdown-item">Differs from</button>
                   <button data="2" class="dropdown-item" disabled>Less than</button>
@@ -199,14 +202,14 @@
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                   Test state
                 </button>
-                <div class="dropdown-menu" id="test-state-list"></div>
+                <div class="dropdown-menu normal-list" id="test-state-list"></div>
               </div>
               <div class="col-sm pl-1">
                 <button type="button"
                   class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
                   New state
                 </button>
-                <div class="dropdown-menu" id="new-state-list"></div>
+                <div class="dropdown-menu normal-list" id="new-state-list"></div>
               </div>
             </div>
             <div class="row">
