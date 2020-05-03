@@ -1,5 +1,4 @@
 # OpenCA
-## Cellular Automata simulator
 
 OpenCA is an open-source simulator for generation-based 2D cellular automata.
 There is no theoretical limit to the size of the model it can simulate, and it currently supports 3^256 = 16777216 concurrent states. Every cell can be made indipendent from the others or share a set of rules globally defined.
@@ -7,7 +6,7 @@ There is no theoretical limit to the size of the model it can simulate, and it c
 ## Setup
 
 There are no dependencies, just clone and open it in your favorite web browser.
-Alternatively you can try it [here](https://hbar-boi.github.io/openca).
+Alternatively you can try it [here](https://hbar-boi.github.io/OpenCA/).
 
 ## Usage
 
