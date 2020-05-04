@@ -18,7 +18,6 @@ export function vec3(...args) {
     this.z = +args[0].z;
   }
 
-
   this.sub = function(other) {
     this.add(other.neg());
 
@@ -58,7 +57,7 @@ export function vec3(...args) {
   }
 
   this.equals = function(other) {
-    if(other === undefined) return false;
+    if(other == undefined) return false;
     const res = (this.x == other.x) && (this.y == other.y) && (this.z == other.z);
     return res;
   }

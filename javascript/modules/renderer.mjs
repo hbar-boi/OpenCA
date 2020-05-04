@@ -63,7 +63,7 @@ export function draw(ctx, map, grid) {
     }
   }
 
-  // Finally overdraw with special ones. Not too inefficient hopefully.
+  // Finally overdraw with special ones. Hopefully not too inefficient.
   const focus = map.cell.focus;
   const hover = map.cell.hover;
   const target = map.cell.target;

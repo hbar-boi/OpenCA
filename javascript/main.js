@@ -1,5 +1,7 @@
 import {map} from "./modules/engine.mjs";
-import {colors, init as initUI, update as updateUI} from "./modules/ui.mjs";
+import {colors, init as initUI,
+  update as updateUI} from "./modules/ui.mjs";
+import {cellClick} from "./modules/ui/cells.mjs";
 
 function init() {
   $("#state-color").colorpicker({
@@ -11,7 +13,7 @@ function init() {
   $(window).resize(() => resize());
 
   initUI();
-  
+
   resize();
   update();
 }
@@ -25,8 +27,8 @@ function resize() {
 function update() { // Update canvas size using grid data
   const canvas = $("#frame");
 
-  let x = $("#x-size").val();
-  let y = $("#y-size").val();
+  let x = +$("#x-size").val();
+  let y = +$("#y-size").val();
 
   if(x < 1) { // Check if size data is valid
     $("#x-size").val(1);
@@ -56,14 +58,14 @@ function update() { // Update canvas size using grid data
   // The remaining 5% are margins and grid lines
   map.cell.margin = (canvas[0].width * 0.05) / (2 * y);
 
-  map.cell.hover = undefined;
   map.cell.focus = undefined;
+  map.cell.hover = undefined;
   map.cell.target = undefined;
 
   // Reset data array
-  map.data.actions = Array(+x).fill().map(() => Array(+y)
+  map.data.actions = Array(x).fill().map(() => Array(y)
     .fill().map(() => Array(0)));
-  map.data.states = Array(+x).fill().map(() => Array(+y).fill(0));
+  map.data.states = Array(x).fill().map(() => Array(y).fill(0));
 
   updateUI();
 }

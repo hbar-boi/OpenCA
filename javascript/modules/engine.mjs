@@ -44,7 +44,6 @@ let interval = undefined;
 let generation = 0;
 
 export function start(target = undefined, sleep = 0) {
-  map.canvas.disabled = true;
   // Save a copy of the starting states for reset.
   initial = JSON.parse(JSON.stringify(map.data.states));
   interval = setInterval(function() {
@@ -70,10 +69,7 @@ export function step() {
 
 // Stop engine
 export function stop() {
-  map.canvas.disabled = false;
-
   clearInterval(interval);
-  draw();
   setStatus("Stopped. ", true);
 }
 
@@ -85,8 +81,6 @@ export function reset() {
     map.data.states = initial;
     initial = undefined;
   }
-  map.canvas.disabled = false;
-  draw();
   setStatus("Ready.", false);
 }
 
@@ -127,7 +121,7 @@ function evalCellActions(cell, current) {
     const mode = item.mode;
     switch(item.target) { // Identify action target
       case action.TARGET_NEIGHBOR:
-        evalNeighbor(cell, item, current);
+        evalNeighborhood(cell, item, current);
         break;
       case action.TARGET_ONE:
         evalOne(cell, item, current)
@@ -145,7 +139,7 @@ function evalOne(cell, act, current) {
     current[cell.x][cell.y] = act.new;
 }
 
-function evalNeighbor(cell, act, current) {
+function evalNeighborhood(cell, act, current) {
   const boundaries = new vec2(act.distance, act.distance);
 
   // Calculate the boundaries of this cell's neighborhood

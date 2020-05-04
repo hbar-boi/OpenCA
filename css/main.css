@@ -45,7 +45,7 @@ h1 > small {
   vertical-align: bottom;
 }
 
-#edit-state, #remove-state, #cell-menu, #action-menu, #target-distance {
+#state-edit, #state-remove, #cell-menu, #action-menu, #target-distance {
   display: none;
 }
 
