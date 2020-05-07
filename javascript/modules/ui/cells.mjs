@@ -18,7 +18,7 @@ function getActive() {
   return getMode() ? map.cell.focus : map.cell.target;
 }
 
-export function cellClick(e) {
+export function click(e) {
   const cell = eventCell(e);
 
   if(cell.equals(getActive())) setActive(undefined);
@@ -27,7 +27,7 @@ export function cellClick(e) {
   update();
 }
 
-export function cellHover(e) { // Cell with cursor on changes color
+export function hover(e) { // Cell with cursor on changes color
   const cell = eventCell(e);
   const hover = map.cell.hover;
   switch(e.type) {
@@ -56,7 +56,7 @@ function eventCell(e) {
     Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box))));
 }
 
-export function moveActive(e) {
+export function move(e) {
   let active = getActive();
   if(active == undefined) return;
 

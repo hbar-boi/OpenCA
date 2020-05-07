@@ -4,7 +4,7 @@ import {colors, draw, getColorBox as box} from "../ui.mjs";
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
 
-export function saveState(id = undefined) { // Create new state or save edits
+export function save(id = undefined) { // Create new state or save edits
   const name = $("#state-name").val();
   const color = $("#state-color").colorpicker("getValue").match(/\d+/g);
   const state = {
@@ -23,7 +23,7 @@ export function saveState(id = undefined) { // Create new state or save edits
   update();
 }
 
-export function removeState(id) { // Rip
+export function remove(id) { // Rip
   map.states.splice(id, 1);
   if(map.states.length == 0) {
     map.states.push({
@@ -35,7 +35,7 @@ export function removeState(id) { // Rip
   update();
 }
 
-export function editState(e) { // Change UI to allow editing of state params
+export function edit(e) { // Change UI to allow editing of state params
   const id = e.target.getAttribute("data");
   const state = map.states[id];
   const color = new vec3(state.color);

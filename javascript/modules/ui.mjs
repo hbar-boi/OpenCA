@@ -23,11 +23,11 @@ export const colors = {
 export function init() {
   // First thing first: bind all events
   $("#frame").on("mousemove mouseout", (e) => {
-    if(!map.canvas.disabled) cellsUI.cellHover(e)
+    if(!map.canvas.disabled) cellsUI.hover(e)
   });
 
   $("#frame").click((e) => {
-    if(!map.canvas.disabled) cellsUI.cellClick(e)
+    if(!map.canvas.disabled) cellsUI.click(e)
   });
 
   $("#grid-display").click(() => draw());
@@ -39,13 +39,13 @@ export function init() {
   });
 
   // State
-  $("#state-add").click(() => statesUI.saveState(undefined));
+  $("#state-add").click(() => statesUI.save(undefined));
 
   $("#state-edit").click(
-    () => statesUI.saveState($("#state-list").attr("active")));
+    () => statesUI.save($("#state-list").attr("active")));
 
   $("#state-remove").click(
-    (e) => statesUI.removeState($("#state-list").attr("active")));
+    (e) => statesUI.remove($("#state-list").attr("active")));
 
   $("#state-set").on("click", ".set-state-entry", (e) => {
       const cell = map.cell.focus;
@@ -53,7 +53,7 @@ export function init() {
   });
 
   $("#state-list").on("click", ".state-edit-entry",
-    (e) => statesUI.editState(e));
+    (e) => statesUI.edit(e));
 
   // Create default state
   map.states = [{
@@ -62,25 +62,25 @@ export function init() {
   }];
 
   // Engine
-  $("#engine-start").click(() => engineUI.startEngine());
-  $("#engine-stop").click(() => engineUI.stopEngine());
-  $("#engine-reset").click(() => engineUI.resetEngine());
+  $("#engine-start").click(() => engineUI.start());
+  $("#engine-stop").click(() => engineUI.stop());
+  $("#engine-reset").click(() => engineUI.reset());
 
   // Action
-  $("#action-apply").click(() => actionsUI.saveAction());
-  $("#action-cancel").click(() => actionsUI.cancelAction());
-  $("#action-add").click(() => actionsUI.addAction());
+  $("#action-apply").click(() => actionsUI.save());
+  $("#action-cancel").click(() => actionsUI.cancel());
+  $("#action-add").click(() => actionsUI.add());
 
   $("#cell-actions").on("click", ".action-delete",
-    (e) => actionsUI.removeAction(e));
+    (e) => actionsUI.remove(e));
   $("#cell-actions").on("click", ".action-share",
-    (e) => actionsUI.shareAction(e));
+    (e) => actionsUI.share(e));
 
   $("#target-list .dropdown-item").click(
     (e) => actionsUI.setActionTarget(e));
 
   // Keyboard
-  $(document).keydown((event) => cellsUI.moveActive(event));
+  $(document).keydown((event) => cellsUI.move(event));
 }
 
 export function getColorBox(color, inline = false) {

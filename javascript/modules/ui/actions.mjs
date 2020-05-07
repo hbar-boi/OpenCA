@@ -4,7 +4,7 @@ import {update} from "./cells.mjs";
 
 // ================= UI STUFF FOR WORKING ON ACTIONS =====================
 
-export function addAction() {
+export function add() {
   $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
   map.canvas.disabled = true;
   $("#action-menu").show();
@@ -13,7 +13,7 @@ export function addAction() {
   draw();
 }
 
-export function cancelAction(e) {
+export function cancel(e) {
   $("#engine-start").prop("disabled", false);
   map.canvas.disabled = false;
   $("#main-menu").show();
@@ -45,7 +45,7 @@ export function setActionTarget(e) {
   draw();
 }
 
-export function saveAction() {
+export function save() {
   const target = $("#target-list").attr("active");
   const mode = $("#mode-list").attr("active");
   const testState = $("#test-state-list").attr("active");
@@ -85,7 +85,7 @@ export function saveAction() {
   update();
 }
 
-export function removeAction(e) {
+export function remove(e) {
   const id = e.target.parentElement.getAttribute("data");
   const focus = map.cell.focus;
   map.data.actions[focus.x][focus.y].splice(id, 1);
@@ -93,7 +93,7 @@ export function removeAction(e) {
   update();
 }
 
-export function shareAction(e) {
+export function share(e) {
   const id = e.target.parentElement.getAttribute("data");
   const cell = map.cell.focus;
   const action = map.data.actions[cell.x][cell.y][id];

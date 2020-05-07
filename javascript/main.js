@@ -1,7 +1,6 @@
 import {map} from "./modules/engine.mjs";
 import {colors, init as initUI,
   update as updateUI} from "./modules/ui.mjs";
-import {cellClick} from "./modules/ui/cells.mjs";
 
 function init() {
   $("#state-color").colorpicker({

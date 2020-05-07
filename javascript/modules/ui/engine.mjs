@@ -5,14 +5,14 @@ import {update} from "./cells.mjs";
 
 // ================= UI STUFF FOR ENGINE OPERATION =======================
 
-export function resetEngine() {
+export function reset() {
   $("#engine-reset").prop("disabled", true);
   map.canvas.disabled = false;
   engineReset();
   draw();
 }
 
-export function stopEngine() {
+export function stop() {
   $("#engine-start, #engine-reset").prop("disabled", false);
   $("#engine-stop").prop("disabled", true);
   map.canvas.disabled = false;
@@ -20,7 +20,7 @@ export function stopEngine() {
   draw();
 }
 
-export function startEngine() {
+export function start() {
   const target = $("#engine-gen").val();
   const interval = $("#engine-interval").val();
   $("#engine-start, #engine-reset").prop("disabled", true);

@@ -30,3 +30,7 @@ This kind of action simply checks if the state of another cell on the grid equal
 ## Running
 
 After setting up your automata rules you can simulate it by clicking on "Start". It's possible to tell the solver to wait for a set amount of time before moving to the next generation. It's also possible to set a target generation that, once reached, stops the simulation. Please note that if the time interval isn't set no update will be drawn until the engine is stopped.
+
+# TODO
+- More grid boundary options: torus, cylinder...
+- "Paint" mode
