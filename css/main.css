@@ -24,7 +24,13 @@ h1 > small {
 
 #frame {
   cursor: pointer;
+  border: 1px solid #ced4da;
+  border-radius: .25rem;
   width: 100%;
+}
+
+#frame.disabled {
+  opacity: 0.5;
 }
 
 #grid-display {

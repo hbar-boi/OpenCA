@@ -1,5 +1,6 @@
 import {vec2, vec3} from "./vectors.mjs";
 import {draw} from "./ui.mjs";
+import {notifyChange, notifyAll} from "./renderer.mjs";
 
 // Big ass object to store our CA data
 export const map = {
@@ -64,6 +65,7 @@ export function reset() {
     map.data.states = initial;
     initial = undefined;
   }
+  notifyAll();
   setStatus("Ready.", false);
 }
 
@@ -117,9 +119,11 @@ function evalOne(cell, act, current) {
   // The trick is here: compare the state from map.data!!!
   const other = map.data.states[act.other.x][act.other.y];
   // This is easy. Just select our mode and
-  if(compare(act.mode, other, act.test))
+  if(compare(act.mode, other, act.test)) {
     // And change states in current!!! Hopefully this works
     current[cell.x][cell.y] = act.new;
+    notifyChange(cell);
+  }
 }
 
 function evalNeighborhood(cell, act, current) {
@@ -144,11 +148,13 @@ function evalNeighborhood(cell, act, current) {
     }
   }
 
-  if(compare(act.mode, count, act.threshold))
+  if(compare(act.mode, count, act.threshold)) {
     current[cell.x][cell.y] = act.new;
+    notifyChange(cell);
+  }
 }
 
-// Variable operator, not bad...
+// Variable operator, pretty cool
 function compare(mode, first, second) {
   switch(mode) {
     case action.MODE_IS:

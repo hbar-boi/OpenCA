@@ -1,17 +1,23 @@
 import {vec2} from "../vectors.mjs";
 import {map} from "../engine.mjs";
+import {notifyChange} from "../renderer.mjs";
 import {draw, settings} from "../ui.mjs";
 import {fillActionList} from "./actions.mjs";
 
 // =============== UI STUFF FOR CELL INTERACTIONS ===================
 
-function getMode() {
+function getMode() { // This is no good
   return $("#main-menu").is(":visible");
 }
 
 function setActive(data) {
-  if(getMode()) settings.cell.focus = data;
-  else settings.cell.target = data;
+  if(getMode()) {
+    notifyChange(settings.cell.focus);
+    settings.cell.focus = data;
+  } else {
+    notifyChange(settings.cell.target);
+    settings.cell.target = data;
+  }
 }
 
 function getActive() {
@@ -30,6 +36,7 @@ export function click(e) {
 export function hover(e) { // Cell with cursor on changes color
   const cell = eventCell(e);
   const hover = settings.cell.hover;
+  notifyChange(hover);
   switch(e.type) {
     case "mousemove":
       if(!cell.equals(hover)) {
@@ -50,10 +57,11 @@ function eventCell(e) {
     e.pageX - settings.canvas.left,
     e.pageY - settings.canvas.top);
 
-  const box = settings.cell.size + (settings.cell.margin * 2);
   return new vec2( // Just divide and clamp to get index. Easy as that.
-    Math.min(map.size.x - 1, Math.max(0, Math.floor(rel.y / box))),
-    Math.min(map.size.y - 1, Math.max(0, Math.floor(rel.x / box))));
+    Math.min(map.size.x - 1, Math.max(
+      0, Math.floor(rel.y / settings.cell.size))),
+    Math.min(map.size.y - 1, Math.max(
+      0, Math.floor(rel.x / settings.cell.size))));
 }
 
 export function move(e) {
@@ -86,9 +94,10 @@ export function move(e) {
   }
 }
 
-export function update() {
+export function update(doDraw = true) {
   const mode = getMode();
   const active = getActive();
+
   if(active == undefined) {
     if(mode) { // If we are in focus mode do UI stuff for focus mode
       $("#cell-actions").html("");
@@ -97,11 +106,14 @@ export function update() {
     } else $("#target-cell").html("Select target");
   } else {
     if(mode) { // Update cell actions 'n shit
-      $("#current-cell").html("Active cell: (" + active.x + ", " + active.y + ")");
+      $("#current-cell").html(
+        "Active cell: (" + active.x + ", " + active.y + ")");
       $("#cell-menu").show();
 
       fillActionList();
-    } else $("#target-cell").html("Target is (" + active.x + ", " + active.y + ")");
+    } else $("#target-cell").html(
+      "Target is (" + active.x + ", " + active.y + ")");
   }
-  draw();
+
+  if(doDraw) draw();
 }

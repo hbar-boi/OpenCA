@@ -1,23 +1,26 @@
 import {map, action} from "../engine.mjs";
-import {draw, getColorBox as box, settings} from "../ui.mjs";
+import {draw, settings, setCanvasState, canvas} from "../ui.mjs";
 import {update} from "./cells.mjs";
+import {getColorBox} from "./states.mjs";
+import {notifyChange} from "../renderer.mjs";
 
 // ================= UI STUFF FOR WORKING ON ACTIONS =====================
 
 export function add() {
   $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
-  settings.canvas.disabled = true;
+  setCanvasState(canvas.DISABLED)
   $("#action-menu").show();
-  $("#main-menu").hide()
+  $("#main-menu").hide();
 
   draw();
 }
 
 export function cancel(e) {
   $("#engine-start").prop("disabled", false);
-  settings.canvas.disabled = false;
+  setCanvasState(canvas.ENABLED);
   $("#main-menu").show();
   $("#action-menu").hide();
+  notifyChange(settings.cell.target);
   settings.cell.target = undefined;
 
   draw();
@@ -27,11 +30,13 @@ export function setActionTarget(e) {
   const target = +e.target.getAttribute("data");
   switch(target) {
     case action.TARGET_ONE:
-      settings.canvas.disabled = false;
+      setCanvasState(canvas.ENABLED);
       $("#target-distance").hide();
       $("#target-cell").show();
       break;
     case action.TARGET_NEIGHBOR:
+      setCanvasState(canvas.DISABLED);
+      notifyChange(settings.cell.target);
       settings.cell.target = undefined;
       $("#target-cell").html("Select target").hide();
       $("#target-distance").show();
@@ -76,7 +81,8 @@ export function save() {
   const current = settings.cell.focus;
   map.data.actions[current.x][current.y].push(entry);
 
-  settings.canvas.disabled = false;
+  setCanvasState(canvas.ENABLED);
+  notifyChange(settings.cell.target);
   settings.cell.target = undefined;
   $("#main-menu").show();
   $("#action-menu").hide();
@@ -138,16 +144,16 @@ export function fillActionList() {
         if(item.threshold != 1) content += item.threshold + " are ";
         else content += item.threshold + " is ";
         if(item.mode == action.MODE_NOT) content += "not ";
-        content += box(map.states[item.test].color, true) +
+        content += getColorBox(map.states[item.test].color, true) +
           " in a neighborhood of " + item.distance + " cells make this " +
-          box(map.states[item.new].color, true);
+          getColorBox(map.states[item.new].color, true);
         break;
       case action.TARGET_ONE:
         const other = item.other;
         content += "(" + other.x + ", " + other.y + ") is ";
         if(item.mode == action.MODE_NOT) content += "not ";
-        content += box(map.states[item.test].color, true) +
-          " make this " + box(map.states[item.new].color, true);
+        content += getColorBox(map.states[item.test].color, true) +
+          " make this " + getColorBox(map.states[item.new].color, true);
         break;
     }
     entry.html(info.html(content)).append(menu[0].cloneNode(true));

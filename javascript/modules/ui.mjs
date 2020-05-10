@@ -1,5 +1,5 @@
-import {vec3} from "./vectors.mjs";
-import {draw as render} from "./renderer.mjs";
+import {vec2, vec3} from "./vectors.mjs";
+import {draw as render, notifyAll} from "./renderer.mjs";
 import {map} from "./engine.mjs";
 
 import * as engineUI from "./ui/engine.mjs";
@@ -17,7 +17,7 @@ export const colors = {
   "FOCUS_COLOR": new vec3(125, 153, 237),
   "TARGET_COLOR": new vec3(152, 111, 255),
   "DEFAULT_COLOR": new vec3(255, 255, 255),
-  "LINE_COLOR": new vec3(161, 161, 161)
+  "LINE_COLOR": new vec3(230, 230, 230)
 };
 
 export const settings = {
@@ -30,7 +30,6 @@ export const settings = {
   },
   "cell": {
     "size": 0,
-    "margin": 0,
     "hover": undefined,
     "focus": undefined,
     "target": undefined
@@ -47,8 +46,6 @@ export function init() {
     if(!settings.canvas.disabled) cellsUI.click(e)
   });
 
-  $("#grid-display").click(() => draw());
-
   // This is needed to make Bootstrap dropdowns work as selects
   $(".normal-list").on("click", ".dropdown-item", (e) => {
     const active = +e.target.getAttribute("data");
@@ -56,27 +53,14 @@ export function init() {
   });
 
   // State
-  $("#state-add").click(() => statesUI.save(undefined));
-
+  $("#state-add").click(
+    () => statesUI.save(undefined));
   $("#state-edit").click(
     () => statesUI.save($("#state-list").attr("active")));
-
   $("#state-remove").click(
-    (e) => statesUI.remove($("#state-list").attr("active")));
-
-  $("#state-set").on("click", ".set-state-entry", (e) => {
-      const cell = settings.cell.focus;
-      map.data.states[cell.x][cell.y] = e.target.getAttribute("data");
-  });
-
-  $("#state-list").on("click", ".state-edit-entry",
-    (e) => statesUI.edit(e));
-
-  // Create default state
-  map.states = [{
-    "name": "Default",
-    "color": colors.DEFAULT_COLOR
-  }];
+    () => statesUI.remove($("#state-list").attr("active")));
+  $("#state-set").on("click", ".set-state-entry", (e) => statesUI.set(e));
+  $("#state-list").on("click", ".state-edit-entry", (e) => statesUI.edit(e));
 
   // Engine
   $("#engine-start").click(() => engineUI.start());
@@ -88,33 +72,39 @@ export function init() {
   $("#action-cancel").click(() => actionsUI.cancel());
   $("#action-add").click(() => actionsUI.add());
 
-  $("#cell-actions").on("click", ".action-delete",
-    (e) => actionsUI.remove(e));
-  $("#cell-actions").on("click", ".action-share",
-    (e) => actionsUI.share(e));
-
-  $("#target-list .dropdown-item").click(
-    (e) => actionsUI.setActionTarget(e));
+  $("#cell-actions").on("click", ".action-delete", (e) => actionsUI.remove(e));
+  $("#cell-actions").on("click", ".action-share", (e) => actionsUI.share(e));
+  $("#target-list .dropdown-item").click((e) => actionsUI.setActionTarget(e));
 
   // Keyboard
   $(document).keydown((event) => cellsUI.move(event));
+
+  // Create default state
+  map.states = [{
+    "name": "Default",
+    "color": colors.DEFAULT_COLOR
+  }];
 }
 
-export function getColorBox(color, inline = false) {
-  const box = $("<span></span>").addClass("color-box")
-    .css("background-color", new vec3(color).toRGBA());
-  if(inline) return box.addClass("color-box-inline")[0].outerHTML;
-  return box;
+export const canvas = {
+  "DISABLED": true,
+  "ENABLED": false
+}
+
+export function setCanvasState(state) {
+  settings.canvas.disabled = state;
+  if(state) $("#frame").addClass("disabled");
+  else $("#frame").removeClass("disabled");
 }
 
 export function update() {
-  cellsUI.update();
+  notifyAll();
+
+  cellsUI.update(false);
   statesUI.update();
 }
 
 export function draw() { // Gets context and calls renderer's draw()
-  const grid = $("#grid-display").prop("checked");
   const ctx = $("#frame")[0].getContext("2d");
-
-  render(ctx, grid);
+  render(ctx);
 }

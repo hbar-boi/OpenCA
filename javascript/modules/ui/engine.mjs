@@ -1,13 +1,14 @@
 import {start as engineStart, stop as engineStop,
   reset as engineReset} from "../engine.mjs";
-import {draw, settings} from "../ui.mjs";
+import {draw, settings, setCanvasState, canvas} from "../ui.mjs";
 import {update} from "./cells.mjs";
+import {notifyChange} from "../renderer.mjs";
 
 // ================= UI STUFF FOR ENGINE OPERATION =======================
 
 export function reset() {
   $("#engine-reset").prop("disabled", true);
-  settings.canvas.disabled = false;
+  setCanvasState(canvas.ENABLED);
   engineReset();
   draw();
 }
@@ -15,7 +16,7 @@ export function reset() {
 export function stop() {
   $("#engine-start, #engine-reset").prop("disabled", false);
   $("#engine-stop").prop("disabled", true);
-  settings.canvas.disabled = false;
+  setCanvasState(canvas.ENABLED);
   engineStop();
   draw();
 }
@@ -26,7 +27,8 @@ export function start() {
   $("#engine-start, #engine-reset").prop("disabled", true);
   $("#engine-stop").prop("disabled", false);
 
-  settings.canvas.disabled = true;
+  setCanvasState(canvas.DISABLED);
+  notifyChange(settings.cell.focus);
   settings.cell.focus = undefined;
   update();
 

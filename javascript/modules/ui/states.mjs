@@ -1,6 +1,7 @@
-import {vec3} from "../vectors.mjs";
+import {vec2, vec3} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {colors, draw, getColorBox as box, settings} from "../ui.mjs";
+import {notifyChange} from "../renderer.mjs";
+import {colors, draw, settings} from "../ui.mjs";
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
 
@@ -17,13 +18,19 @@ export function save(id = undefined) { // Create new state or save edits
     new vec3(e.color).equals(state.color) && i != id))) return;
 
   // Create new state or update old one
-  if(id == undefined) map.states.push(state);
-  else map.states[id] = state;
+  if(id == undefined) {
+    map.states.push(state);
+    id = map.states.length - 1;
+  } else map.states[id] = state;
+  notifyChange(getCellsByStateId(id));
   // Rebuild list
   update();
 }
 
 export function remove(id) { // Rip
+  // Cells with this id have to be reset...
+  notifyChange(getCellsByStateId(id));
+
   map.states.splice(id, 1);
   if(map.states.length == 0) {
     map.states.push({
@@ -49,6 +56,30 @@ export function edit(e) { // Change UI to allow editing of state params
   $("#state-add").hide();
 }
 
+export function set(e) {
+  const cell = settings.cell.focus;
+  map.data.states[cell.x][cell.y] = e.target.getAttribute("data");
+  notifyChange(cell);
+}
+
+function getCellsByStateId(id) {
+  const cells = [];
+  map.data.states.forEach((row, i) => {
+    row.reduce((cells, item, j) => {
+      if(item == id) cells.push(new vec2(i, j));
+      return cells;
+    }, cells);
+  });
+  return cells.flat();
+}
+
+export function getColorBox(color, inline = false) {
+  const box = $("<span></span>").addClass("color-box")
+    .css("background-color", new vec3(color).toRGBA());
+  if(inline) return box.addClass("color-box-inline")[0].outerHTML;
+  return box;
+}
+
 export function fillStateList(list, identifier) { // Fills a bootstrap dropdown
   list.html("");
 
@@ -58,12 +89,12 @@ export function fillStateList(list, identifier) { // Fills a bootstrap dropdown
   map.states.forEach(function(item, i) {
     entry.attr("data", i);
     entry.html(item.name);
-    entry.append(box(item.color));
+    entry.append(getColorBox(item.color));
     list.append(entry[0].cloneNode(true));
   });
 }
 
-export function update() {
+export function update(doDraw = true) {
   $("#state-name").val("");
   $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
 
@@ -77,5 +108,5 @@ export function update() {
   fillStateList($("#test-state-list"), "test-state-entry");
   fillStateList($("#new-state-list"), "new-state-list");
 
-  draw();
+  if(doDraw) draw();
 }

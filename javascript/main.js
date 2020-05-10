@@ -52,10 +52,7 @@ function update() { // Update canvas size using grid data
   settings.canvas.height = canvas[0].height = Math.round(
     canvas[0].offsetWidth * ratio * window.devicePixelRatio);
 
-  // Cells gunna take 95% of canvas
-  settings.cell.size = (canvas[0].width * 0.95) / y;
-  // The remaining 5% are margins and grid lines
-  settings.cell.margin = (canvas[0].width * 0.05) / (2 * y);
+  settings.cell.size = canvas[0].width / y;
 
   settings.cell.focus = undefined;
   settings.cell.hover = undefined;
