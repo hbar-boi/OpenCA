@@ -1,6 +1,6 @@
 import {vec3} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {colors, draw, getColorBox as box} from "../ui.mjs";
+import {colors, draw, getColorBox as box, settings} from "../ui.mjs";
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
 

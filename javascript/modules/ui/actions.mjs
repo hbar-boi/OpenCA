@@ -1,12 +1,12 @@
 import {map, action} from "../engine.mjs";
-import {draw, getColorBox as box} from "../ui.mjs";
+import {draw, getColorBox as box, settings} from "../ui.mjs";
 import {update} from "./cells.mjs";
 
 // ================= UI STUFF FOR WORKING ON ACTIONS =====================
 
 export function add() {
   $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
-  map.canvas.disabled = true;
+  settings.canvas.disabled = true;
   $("#action-menu").show();
   $("#main-menu").hide()
 
@@ -15,10 +15,10 @@ export function add() {
 
 export function cancel(e) {
   $("#engine-start").prop("disabled", false);
-  map.canvas.disabled = false;
+  settings.canvas.disabled = false;
   $("#main-menu").show();
   $("#action-menu").hide();
-  map.cell.target = undefined;
+  settings.cell.target = undefined;
 
   draw();
 }
@@ -27,12 +27,12 @@ export function setActionTarget(e) {
   const target = +e.target.getAttribute("data");
   switch(target) {
     case action.TARGET_ONE:
-      map.canvas.disabled = false;
+      settings.canvas.disabled = false;
       $("#target-distance").hide();
       $("#target-cell").show();
       break;
     case action.TARGET_NEIGHBOR:
-      map.cell.target = undefined;
+      settings.cell.target = undefined;
       $("#target-cell").html("Select target").hide();
       $("#target-distance").show();
       break;
@@ -69,15 +69,15 @@ export function save() {
     entry.distance = +distance;
     entry.threshold = +threshold;
   } else {
-    if(map.cell.target == undefined) return;
-    entry.other = map.cell.target;
+    if(settings.cell.target == undefined) return;
+    entry.other = settings.cell.target;
   }
 
-  const current = map.cell.focus;
+  const current = settings.cell.focus;
   map.data.actions[current.x][current.y].push(entry);
 
-  map.canvas.disabled = false;
-  map.cell.target = undefined;
+  settings.canvas.disabled = false;
+  settings.cell.target = undefined;
   $("#main-menu").show();
   $("#action-menu").hide();
   $("#engine-start").prop("disabled", false);
@@ -87,7 +87,7 @@ export function save() {
 
 export function remove(e) {
   const id = e.target.parentElement.getAttribute("data");
-  const focus = map.cell.focus;
+  const focus = settings.cell.focus;
   map.data.actions[focus.x][focus.y].splice(id, 1);
 
   update();
@@ -95,10 +95,10 @@ export function remove(e) {
 
 export function share(e) {
   const id = e.target.parentElement.getAttribute("data");
-  const cell = map.cell.focus;
+  const cell = settings.cell.focus;
   const action = map.data.actions[cell.x][cell.y][id];
-  for(let i = 0; i < map.grid.x; i++) {
-    for(let j = 0; j < map.grid.y; j++) {
+  for(let i = 0; i < map.size.x; i++) {
+    for(let j = 0; j < map.size.y; j++) {
       if(i == cell.x && j == cell.y) continue;
       map.data.actions[i][j].push(action);
     }
@@ -106,7 +106,7 @@ export function share(e) {
 }
 
 export function fillActionList() {
-  const cell = map.cell.focus;
+  const cell = settings.cell.focus;
   const actions = map.data.actions[cell.x][cell.y];
 
   const list = $("#cell-actions").html("");

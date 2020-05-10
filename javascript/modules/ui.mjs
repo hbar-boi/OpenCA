@@ -20,14 +20,31 @@ export const colors = {
   "LINE_COLOR": new vec3(161, 161, 161)
 };
 
+export const settings = {
+  "canvas": {
+    "top": 0,
+    "left": 0,
+    "width": 0,
+    "height": 0,
+    "disabled": false
+  },
+  "cell": {
+    "size": 0,
+    "margin": 0,
+    "hover": undefined,
+    "focus": undefined,
+    "target": undefined
+  },
+}
+
 export function init() {
   // First thing first: bind all events
   $("#frame").on("mousemove mouseout", (e) => {
-    if(!map.canvas.disabled) cellsUI.hover(e)
+    if(!settings.canvas.disabled) cellsUI.hover(e)
   });
 
   $("#frame").click((e) => {
-    if(!map.canvas.disabled) cellsUI.click(e)
+    if(!settings.canvas.disabled) cellsUI.click(e)
   });
 
   $("#grid-display").click(() => draw());
@@ -48,7 +65,7 @@ export function init() {
     (e) => statesUI.remove($("#state-list").attr("active")));
 
   $("#state-set").on("click", ".set-state-entry", (e) => {
-      const cell = map.cell.focus;
+      const cell = settings.cell.focus;
       map.data.states[cell.x][cell.y] = e.target.getAttribute("data");
   });
 
@@ -99,5 +116,5 @@ export function draw() { // Gets context and calls renderer's draw()
   const grid = $("#grid-display").prop("checked");
   const ctx = $("#frame")[0].getContext("2d");
 
-  render(ctx, map, grid);
+  render(ctx, grid);
 }

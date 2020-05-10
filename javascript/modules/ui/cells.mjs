@@ -1,6 +1,6 @@
 import {vec2} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {draw} from "../ui.mjs";
+import {draw, settings} from "../ui.mjs";
 import {fillActionList} from "./actions.mjs";
 
 // =============== UI STUFF FOR CELL INTERACTIONS ===================
@@ -10,12 +10,12 @@ function getMode() {
 }
 
 function setActive(data) {
-  if(getMode()) map.cell.focus = data;
-  else map.cell.target = data;
+  if(getMode()) settings.cell.focus = data;
+  else settings.cell.target = data;
 }
 
 function getActive() {
-  return getMode() ? map.cell.focus : map.cell.target;
+  return getMode() ? settings.cell.focus : settings.cell.target;
 }
 
 export function click(e) {
@@ -29,16 +29,16 @@ export function click(e) {
 
 export function hover(e) { // Cell with cursor on changes color
   const cell = eventCell(e);
-  const hover = map.cell.hover;
+  const hover = settings.cell.hover;
   switch(e.type) {
     case "mousemove":
       if(!cell.equals(hover)) {
-        map.cell.hover = cell;
+        settings.cell.hover = cell;
         return;
       }
       break;
     case "mouseout":
-      map.cell.hover = undefined; // Reset object
+      settings.cell.hover = undefined; // Reset object
       break;
   }
 
@@ -47,13 +47,13 @@ export function hover(e) { // Cell with cursor on changes color
 
 function eventCell(e) {
   const rel = new vec2( // Translate to top-left of canvas
-    e.pageX - map.canvas.left,
-    e.pageY - map.canvas.top);
+    e.pageX - settings.canvas.left,
+    e.pageY - settings.canvas.top);
 
-  const box = map.cell.size + (map.cell.margin * 2);
+  const box = settings.cell.size + (settings.cell.margin * 2);
   return new vec2( // Just divide and clamp to get index. Easy as that.
-    Math.min(map.grid.x - 1, Math.max(0, Math.floor(rel.y / box))),
-    Math.min(map.grid.y - 1, Math.max(0, Math.floor(rel.x / box))));
+    Math.min(map.size.x - 1, Math.max(0, Math.floor(rel.y / box))),
+    Math.min(map.size.y - 1, Math.max(0, Math.floor(rel.x / box))));
 }
 
 export function move(e) {
@@ -72,10 +72,10 @@ export function move(e) {
       if(active.x != 0) active.sub(up);
       break;
     case 39:
-      if(active.y != map.grid.y - 1) active.add(right);
+      if(active.y != map.size.y - 1) active.add(right);
       break;
     case 40:
-      if(active.x != map.grid.x - 1) active.add(up);
+      if(active.x != map.size.x - 1) active.add(up);
       break;
   }
 

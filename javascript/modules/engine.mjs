@@ -3,24 +3,7 @@ import {draw} from "./ui.mjs";
 
 // Big ass object to store our CA data
 export const map = {
-  "grid": {
-    "x": 0,
-    "y": 0
-  },
-  "canvas": {
-    "top": 0,
-    "left": 0,
-    "width": 0,
-    "height": 0,
-    "disabled": false
-  },
-  "cell": {
-    "size": 0,
-    "margin": 0,
-    "hover": undefined,
-    "focus": undefined,
-    "target": undefined
-  },
+  "size": undefined,
   "states": [],
   "data": {
     "states": undefined,
@@ -101,8 +84,8 @@ function advance() {
   const start = new Date().getTime();
   // This will be our working copy. We could just as well pass the states only.
   const current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
-  for(let i = 0; i < map.grid.x; i++) {
-    for(let j = 0; j < map.grid.y; j++) {
+  for(let i = 0; i < map.size.x; i++) {
+    for(let j = 0; j < map.size.y; j++) {
       // Just iterate over all cells and evaluate one by one.
       evalCellActions(new vec2(i, j), current);
     }
@@ -148,8 +131,8 @@ function evalNeighborhood(cell, act, current) {
   start.x = (start.x >= 0) ? start.x : 0;
   start.y = (start.y >= 0) ? start.y : 0;
   const end = new vec2(cell).add(boundaries);
-  end.x = (end.x < map.grid.x) ? end.x : map.grid.x - 1;
-  end.y = (end.y < map.grid.y) ? end.y : map.grid.y - 1;
+  end.x = (end.x < map.size.x) ? end.x : map.size.x - 1;
+  end.y = (end.y < map.size.y) ? end.y : map.size.y - 1;
 
   // Check neighboirng cells and increase count when finding a matching one
   let count = 0;

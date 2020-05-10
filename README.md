@@ -34,3 +34,5 @@ After setting up your automata rules you can simulate it by clicking on "Start".
 # TODO
 - More grid boundary options: torus, cylinder...
 - "Paint" mode
+- "Import" and "Export"
+- Engine performance improvements
