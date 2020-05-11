@@ -1,7 +1,7 @@
 import {vec2, vec3} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {notifyChange} from "../renderer.mjs";
-import {colors, draw, settings} from "../ui.mjs";
+import {notify} from "../renderer.mjs";
+import {colors, draw, cell} from "../ui.mjs";
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
 
@@ -18,18 +18,20 @@ export function save(id = undefined) { // Create new state or save edits
     new vec3(e.color).equals(state.color) && i != id))) return;
 
   // Create new state or update old one
-  if(id == undefined) {
+  if(!id) {
     map.states.push(state);
     id = map.states.length - 1;
   } else map.states[id] = state;
-  notifyChange(getCellsByStateId(id));
+
+  notify(getCellsByStateId(id));
   // Rebuild list
   update();
+  draw();
 }
 
 export function remove(id) { // Rip
   // Cells with this id have to be reset...
-  notifyChange(getCellsByStateId(id));
+  notify(getCellsByStateId(id));
 
   map.states.splice(id, 1);
   if(map.states.length == 0) {
@@ -40,36 +42,36 @@ export function remove(id) { // Rip
   }
   // Rebuild list
   update();
+  draw();
 }
 
 export function edit(e) { // Change UI to allow editing of state params
   const id = e.target.getAttribute("data");
   const state = map.states[id];
-  const color = new vec3(state.color);
   // Prepare current state data
   $("#state-list").attr("active", id);
   $("#state-name").val(state.name);
-  $("#state-color").colorpicker("setValue", color.toRGBA());
+  $("#state-color").colorpicker("setValue", state.color.toRGBA());
 
-  $("#state-edit").show();
-  $("#state-remove").show();
+  $("#state-edit, #state-remove").show();
   $("#state-add").hide();
 }
 
 export function set(e) {
-  const cell = settings.cell.focus;
-  map.data.states[cell.x][cell.y] = e.target.getAttribute("data");
-  notifyChange(cell);
+  const state = e.target.getAttribute("data");
+  map.data.states[cell.focus.x][cell.focus.y] = state;
+  notify(cell.focus);
 }
 
 function getCellsByStateId(id) {
   const cells = [];
   map.data.states.forEach((row, i) => {
     row.reduce((cells, item, j) => {
-      if(item == id) cells.push(new vec2(i, j));
+      if(item == id) cells.push([i, j]);
       return cells;
     }, cells);
   });
+
   return cells.flat();
 }
 
@@ -94,12 +96,11 @@ export function fillStateList(list, identifier) { // Fills a bootstrap dropdown
   });
 }
 
-export function update(doDraw = true) {
+export function update() {
   $("#state-name").val("");
   $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
 
-  $("#state-edit").hide();
-  $("#state-remove").hide();
+  $("#state-edit, #state-remove").hide();
   $("#state-add").show();
   // Rebuild lists containing changed data
   fillStateList($("#state-list"), "state-edit-entry");
@@ -107,6 +108,4 @@ export function update(doDraw = true) {
 
   fillStateList($("#test-state-list"), "test-state-entry");
   fillStateList($("#new-state-list"), "new-state-list");
-
-  if(doDraw) draw();
 }

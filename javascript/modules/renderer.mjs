@@ -1,5 +1,5 @@
 import {vec2, vec3} from "./vectors.mjs";
-import {colors, settings} from "./ui.mjs";
+import {colors, cell} from "./ui.mjs";
 import {map} from "./engine.mjs";
 
 let updated = [];
@@ -7,42 +7,43 @@ let updated = [];
 // Canvas renderer module, does all the interfacing with ctx
 
 // Draw a single cell, if no color is specified use the cell's
-function cell(ctx, cell, color = undefined) {
-  const state = map.data.states[cell.x][cell.y];
-  if(color == undefined) color = map.states[state].color;
-
-  const size = settings.cell.size;
+function drawCell(ctx, current, color = undefined) {
+  const state = map.data.states[current[0]][current[1]];
+  if(!color) color = map.states[state].color;
+  const size = cell.size;
   ctx.beginPath();
-  ctx.rect(Math.floor(size * cell.y), Math.floor(size * cell.x),
+  ctx.rect(Math.floor(size * current[1]), Math.floor(size * current[0]),
     Math.ceil(size), Math.ceil(size));
-  ctx.fillStyle = new vec3(color).toRGBA();
+  ctx.fillStyle = color.toRGBA();
   ctx.fill();
 }
 
 // Draw EVERYTHING
 export function draw(ctx) {
   // Iterate and draw cells
-  updated.forEach((item) => cell(ctx, item));
+  for(let k = 0; k < updated.length; k++) drawCell(ctx, updated[k])
   updated = [];
-
   // Then overdraw with special ones. Hopefully not too inefficient.
-  const focus = settings.cell.focus;
-  const hover = settings.cell.hover;
-  const target = settings.cell.target;
-
-  if(hover != undefined) cell(ctx, hover, colors.HOVER_COLOR);
-  if(focus != undefined) cell(ctx, focus, colors.FOCUS_COLOR);
-  if(target != undefined) cell(ctx, target, colors.TARGET_COLOR);
+  if(cell.focus) drawCell(ctx, cell.focus, colors.FOCUS_COLOR);
+  if(cell.hover) drawCell(ctx, cell.hover, colors.HOVER_COLOR);
+  if(cell.target) drawCell(ctx, cell.target, colors.TARGET_COLOR);
 }
 
-export function notifyChange(cell) {
-  if(cell == undefined) return;
-  if(Array.isArray(cell)) updated.push(...cell);
-  else updated.push(cell);
+export function fastNotify(x, y) {
+  updated.push([x, y]);
+}
+
+export function notifyIfValid(current) {
+  if(current) updated.push(current);
+}
+
+export function notify(current) {
+  if(Array.isArray(current)) updated.push(...current);
+  else updated.push(current);
 }
 
 export function notifyAll() {
   updated = Array(map.size.x).fill().map(
     (row, i) => Array(map.size.y).fill().map(
-      (cell, j) => new vec2(i, j))).flat();
+      (current, j) => [i, j])).flat();
 }

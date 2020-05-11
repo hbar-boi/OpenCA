@@ -9,13 +9,13 @@ export function vec2(...args) {
 
 export function vec3(...args) {
   if(args.length > 1) {
-    this.x = +args[0];
-    this.y = +args[1];
-    this.z = +args[2];
+    this[0] = this.x = +args[0];
+    this[1] = this.y = +args[1];
+    this[2] = this.z = +args[2];
   } else {
-    this.x = +args[0].x;
-    this.y = +args[0].y;
-    this.z = +args[0].z;
+    this[0] = this.x = +args[0].x;
+    this[1] = this.y = +args[0].y;
+    this[2] = this.z = +args[0].z;
   }
 
   this.sub = function(other) {
@@ -25,9 +25,9 @@ export function vec3(...args) {
   }
 
   this.add = function(other) {
-    this.x += other.x;
-    this.y += other.y;
-    this.z += other.z;
+    this[0] = this.x += other.x;
+    this[1] = this.y += other.y;
+    this[2] = this.z += other.z;
 
     return this;
   }
@@ -47,7 +47,7 @@ export function vec3(...args) {
     return res;
   }
 
-  this.cross = function(other) {
+  this.wedge = function(other) {
     const res = new vec3(
       (this.y * other.z) - (this.z * other.y),
       (this.z * other.x) - (this.x * other.z),
@@ -57,7 +57,7 @@ export function vec3(...args) {
   }
 
   this.equals = function(other) {
-    if(other == undefined) return false;
+    if(!other) return false;
     const res = (this.x == other.x) && (this.y == other.y) && (this.z == other.z);
     return res;
   }

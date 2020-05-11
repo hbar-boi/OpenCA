@@ -1,6 +1,7 @@
 import {vec2, vec3} from "./vectors.mjs";
 import {draw} from "./ui.mjs";
-import {notifyChange, notifyAll} from "./renderer.mjs";
+import {notifyAll, fastNotify} from "./renderer.mjs";
+import {setStatus} from "./ui/engine.mjs";
 
 // Big ass object to store our CA data
 export const map = {
@@ -11,6 +12,16 @@ export const map = {
     "actions": undefined
   }
 };
+
+const meta = {
+  "initial": undefined,
+  "interval": undefined,
+  "generation": 0,
+
+  "sleep": 0,
+  "target": undefined,
+  "current": undefined
+}
 
 // Enum for action configuration
 export const action = {
@@ -23,56 +34,50 @@ export const action = {
   "MODE_MORE": 3
 }
 
-let initial = undefined;
-let interval = undefined;
-let generation = 0;
-
 export function start(target = undefined, sleep = 0) {
+  meta.sleep = sleep;
+  meta.target = target;
   // Save a copy of the starting states for reset.
-  initial = JSON.parse(JSON.stringify(map.data.states));
-  interval = setInterval(function() {
-    const delta = advance();
-    generation++;
-    if(sleep > 0) draw(); // No need to draw if immediately overwritten...
-    if(target != undefined && generation >= target) {
-      // Done with this simulation. Stop everything.
-      clearInterval(interval);
-      setStatus("Done. ", true);
-      $("#engine-status").html("Done. Generation: " + generation);
-      draw();
-    } else setStatus("Running. Delta: " + delta + " (ms), ", true);
-  }, sleep);
+  meta.initial = JSON.parse(JSON.stringify(map.data.states));
+  meta.interval = setInterval(() => step(), meta.sleep);
 }
 
 // Step one generation
 export function step() {
-  advance();
-  generation++;
-  draw();
+  const delta = advance();
+  meta.generation++;
+
+  if(meta.target != undefined && meta.generation >= meta.target) {
+    // Done with this simulation. Stop everything.
+    clearInterval(meta.interval);
+
+    setStatus("Done. ", meta.generation);
+    draw();
+    return;
+  } else setStatus("Running. Delta: " + delta + " (ms), ", meta.generation);
+
+  if(meta.sleep > 0) draw(); // No need to draw if immediately overwritten...
 }
 
 // Stop engine
 export function stop() {
-  clearInterval(interval);
-  setStatus("Stopped. ", true);
+  clearInterval(meta.interval);
+  notifyAll();
+
+  setStatus("Stopped. ", meta.generation);
 }
 
 export function reset() {
   // Back from the beginning.
-  generation = 0;
+  meta.generation = 0;
   // We may have some crap data from older simulations. Clean it up.
-  if(initial != undefined) {
-    map.data.states = initial;
-    initial = undefined;
+  if(meta.initial != undefined) {
+    map.data.states = meta.initial;
+    meta.initial = undefined;
   }
   notifyAll();
-  setStatus("Ready.", false);
-}
 
-function setStatus(before, gen) {
-  const container = $("#engine-status");
-  container.html(before);
-  if(gen) container.append("Generation: " + generation);
+  setStatus("Ready.");
 }
 
 // STRATEGY. Since we want to compare ALL cells at the same time
@@ -85,72 +90,71 @@ function setStatus(before, gen) {
 function advance() {
   const start = new Date().getTime();
   // This will be our working copy. We could just as well pass the states only.
-  const current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
+  meta.current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
   for(let i = 0; i < map.size.x; i++) {
     for(let j = 0; j < map.size.y; j++) {
       // Just iterate over all cells and evaluate one by one.
-      evalCellActions(new vec2(i, j), current);
+      evalCellActions(i, j);
     }
   }
   // All is done. Just make the new states drawable and move on.
-  map.data.states = current;
+  map.data.states = meta.current;
   const end = new Date().getTime();
   // Return time elapsed while evaluating this generaiton.
   return (end - start);
 }
 
-function evalCellActions(cell, current) {
+function evalCellActions(x, y) {
   // Actions are actions: don't care if we get them from the original data.
-  const actions = map.data.actions[cell.x][cell.y];
-  actions.forEach(function(item, i) {
-    const mode = item.mode;
-    switch(item.target) { // Identify action target
+  const actions = map.data.actions[x][y];
+  for(let k = 0; k < actions.length; k++) {
+    switch(actions[k].target) {
       case action.TARGET_NEIGHBOR:
-        evalNeighborhood(cell, item, current);
+        evalNeighborhood(x, y, actions[k]);
         break;
       case action.TARGET_ONE:
-        evalOne(cell, item, current)
+        evalOne(x, y, actions[k]);
         break;
     }
-  });
-}
-
-function evalOne(cell, act, current) {
-  // The trick is here: compare the state from map.data!!!
-  const other = map.data.states[act.other.x][act.other.y];
-  // This is easy. Just select our mode and
-  if(compare(act.mode, other, act.test)) {
-    // And change states in current!!! Hopefully this works
-    current[cell.x][cell.y] = act.new;
-    notifyChange(cell);
   }
 }
 
-function evalNeighborhood(cell, act, current) {
-  const boundaries = new vec2(act.distance, act.distance);
+function evalOne(x, y, act) {
+  // The trick is here: compare the state from map.data!!!
+  const other = map.data.states[act.other.x][act.other.y];
+  // This is easy. Just select our mode and
+  if(compare(act.mode, other, act.test))
+    // And change states in current!!! Hopefully this works
+    meta.current[x][y] = act.new;
+    if(meta.sleep > 0) fastNotify(x, y);
+}
 
+function evalNeighborhood(x, y, act) {
   // Calculate the boundaries of this cell's neighborhood
   // If they exceed our grid's limits cap them.
-  const start = new vec2(cell).sub(boundaries);
-  start.x = (start.x >= 0) ? start.x : 0;
-  start.y = (start.y >= 0) ? start.y : 0;
-  const end = new vec2(cell).add(boundaries);
-  end.x = (end.x < map.size.x) ? end.x : map.size.x - 1;
-  end.y = (end.y < map.size.y) ? end.y : map.size.y - 1;
+  let xStart = x - act.distance;
+  let yStart = y - act.distance;
+  xStart = (xStart >= 0) ? xStart : 0;
+  yStart = (yStart >= 0) ? yStart : 0;
+
+  let xEnd = x + act.distance;
+  let yEnd = y + act.distance;
+  xEnd = (xEnd < map.size.x) ? xEnd : map.size.x - 1;
+  yEnd = (yEnd < map.size.y) ? yEnd : map.size.y - 1;
 
   // Check neighboirng cells and increase count when finding a matching one
   let count = 0;
-  for(let i = start.x; i <= end.x ; i++) {
-    for(let j = start.y; j <= end.y; j++) {
-      if(cell.x == i && cell.y == j) continue;
+  for(let i = xStart; i <= xEnd ; i++) {
+    for(let j = yStart; j <= yEnd; j++) {
+      if(x == i && y == j) continue;
       if(map.data.states[i][j] == act.test)
         count++;
     }
   }
 
   if(compare(act.mode, count, act.threshold)) {
-    current[cell.x][cell.y] = act.new;
-    notifyChange(cell);
+    meta.current[x][y] = act.new;
+    if(meta.sleep > 0) fastNotify(x, y);
   }
 }
 

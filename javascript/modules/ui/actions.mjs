@@ -1,51 +1,53 @@
 import {map, action} from "../engine.mjs";
-import {draw, settings, setCanvasState, canvas} from "../ui.mjs";
-import {update} from "./cells.mjs";
+import {draw, setCanvasState, canvas, cell} from "../ui.mjs";
+import {update, setUICell} from "./cells.mjs";
 import {getColorBox} from "./states.mjs";
-import {notifyChange} from "../renderer.mjs";
 
 // ================= UI STUFF FOR WORKING ON ACTIONS =====================
 
 export function add() {
   $("#engine-start, #engine-stop, #engine-reset").prop("disabled", true);
-  setCanvasState(canvas.DISABLED)
   $("#action-menu").show();
   $("#main-menu").hide();
 
+  setCanvasState(canvas.DISABLED)
   draw();
 }
 
 export function cancel(e) {
   $("#engine-start").prop("disabled", false);
-  setCanvasState(canvas.ENABLED);
   $("#main-menu").show();
   $("#action-menu").hide();
-  notifyChange(settings.cell.target);
-  settings.cell.target = undefined;
+
+  setCanvasState(canvas.ENABLED);
+  cell.ACTIVE = cell.FOCUS;
+  setUICell(cell.TARGET, undefined);
 
   draw();
 }
 
 export function setActionTarget(e) {
   const target = +e.target.getAttribute("data");
+
   switch(target) {
     case action.TARGET_ONE:
-      setCanvasState(canvas.ENABLED);
       $("#target-distance").hide();
       $("#target-cell").show();
+
+      setCanvasState(canvas.ENABLED);
+      cell.ACTIVE = cell.TARGET;
       break;
     case action.TARGET_NEIGHBOR:
-      setCanvasState(canvas.DISABLED);
-      notifyChange(settings.cell.target);
-      settings.cell.target = undefined;
       $("#target-cell").html("Select target").hide();
       $("#target-distance").show();
+      setCanvasState(canvas.DISABLED);
+      setUICell(cell.TARGET, undefined);
       break;
   }
-  $("#mode-list .dropdown-item:gt(-3)").prop("disabled",
-    target == action.TARGET_ONE);
-  $("#action-thresh").prop("disabled",
-    target == action.TARGET_ONE);
+
+  const isOne = (target == action.TARGET_ONE);
+  $("#mode-list .dropdown-item:gt(-3)").prop("disabled", isOne);
+  $("#action-thresh").prop("disabled", isOne);
 
   draw();
 }
@@ -56,8 +58,7 @@ export function save() {
   const testState = $("#test-state-list").attr("active");
   const newState = $("#new-state-list").attr("active");
 
-  if(target == undefined || mode == undefined ||
-    testState == undefined || newState == undefined) return;
+  if(!target || !mode || !testState || !newState) return;
 
   const entry = {
     "target": +target,
@@ -71,49 +72,56 @@ export function save() {
 
   if(target == action.TARGET_NEIGHBOR) {
     if(distance == "" || threshold == "") return;
+
     entry.distance = +distance;
     entry.threshold = +threshold;
   } else {
-    if(settings.cell.target == undefined) return;
-    entry.other = settings.cell.target;
+    if(!cell.target) return;
+
+    entry.other = cell.target;
   }
 
-  const current = settings.cell.focus;
+  const current = cell.focus;
   map.data.actions[current.x][current.y].push(entry);
 
-  setCanvasState(canvas.ENABLED);
-  notifyChange(settings.cell.target);
-  settings.cell.target = undefined;
   $("#main-menu").show();
   $("#action-menu").hide();
   $("#engine-start").prop("disabled", false);
 
+  setCanvasState(canvas.ENABLED);
+  cell.ACTIVE = cell.FOCUS;
+  setUICell(cell.TARGET, undefined);
+
   update();
+  draw();
 }
 
 export function remove(e) {
   const id = e.target.parentElement.getAttribute("data");
-  const focus = settings.cell.focus;
+  const focus = cell.focus;
+
   map.data.actions[focus.x][focus.y].splice(id, 1);
 
   update();
+  draw();
 }
 
 export function share(e) {
   const id = e.target.parentElement.getAttribute("data");
-  const cell = settings.cell.focus;
-  const action = map.data.actions[cell.x][cell.y][id];
+  const current = cell.focus;
+  const action = map.data.actions[current.x][current.y][id];
+
   for(let i = 0; i < map.size.x; i++) {
     for(let j = 0; j < map.size.y; j++) {
-      if(i == cell.x && j == cell.y) continue;
+      if(i == current.x && j == current.y) continue;
       map.data.actions[i][j].push(action);
     }
   }
 }
 
 export function fillActionList() {
-  const cell = settings.cell.focus;
-  const actions = map.data.actions[cell.x][cell.y];
+  const current = cell.focus;
+  const actions = map.data.actions[current.x][current.y];
 
   const list = $("#cell-actions").html("");
   const entry = $("<li></li>").addClass("list-group-item");

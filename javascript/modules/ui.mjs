@@ -20,34 +20,47 @@ export const colors = {
   "LINE_COLOR": new vec3(230, 230, 230)
 };
 
-export const settings = {
-  "canvas": {
-    "top": 0,
-    "left": 0,
-    "width": 0,
-    "height": 0,
-    "disabled": false
-  },
-  "cell": {
-    "size": 0,
-    "hover": undefined,
-    "focus": undefined,
-    "target": undefined
-  },
+export const canvas = {
+  "ctx": undefined,
+
+  "top": 0,
+  "left": 0,
+  "width": 0,
+  "height": 0,
+  "disabled": false,
+
+  "DISABLED": true,
+  "ENABLED": false
+}
+
+export const cell = {
+  "size": 0,
+
+  "focus": undefined,
+  "target": undefined,
+  "hover": undefined,
+
+  "FOCUS": "focus",
+  "TARGET": "target",
+  "HOVER": "hover",
+
+  "ACTIVE": "focus"
 }
 
 export function init() {
+  canvas.ctx = $("#frame")[0].getContext("2d");
   // First thing first: bind all events
   $("#frame").on("mousemove mouseout", (e) => {
-    if(!settings.canvas.disabled) cellsUI.hover(e)
+    if(!canvas.disabled) cellsUI.hover(e)
   });
 
   $("#frame").click((e) => {
-    if(!settings.canvas.disabled) cellsUI.click(e)
+    if(!canvas.disabled) cellsUI.click(e)
   });
 
   // This is needed to make Bootstrap dropdowns work as selects
   $(".normal-list").on("click", ".dropdown-item", (e) => {
+    if(e.target.classList.contains("color-box")) return;
     const active = +e.target.getAttribute("data");
     e.target.parentElement.setAttribute("active", active);
   });
@@ -77,7 +90,7 @@ export function init() {
   $("#target-list .dropdown-item").click((e) => actionsUI.setActionTarget(e));
 
   // Keyboard
-  $(document).keydown((event) => cellsUI.move(event));
+  $(document).keydown((e) => cellsUI.move(e));
 
   // Create default state
   map.states = [{
@@ -86,13 +99,8 @@ export function init() {
   }];
 }
 
-export const canvas = {
-  "DISABLED": true,
-  "ENABLED": false
-}
-
 export function setCanvasState(state) {
-  settings.canvas.disabled = state;
+  canvas.disabled = state;
   if(state) $("#frame").addClass("disabled");
   else $("#frame").removeClass("disabled");
 }
@@ -100,11 +108,10 @@ export function setCanvasState(state) {
 export function update() {
   notifyAll();
 
-  cellsUI.update(false);
+  cellsUI.update();
   statesUI.update();
 }
 
 export function draw() { // Gets context and calls renderer's draw()
-  const ctx = $("#frame")[0].getContext("2d");
-  render(ctx);
+  render(canvas.ctx);
 }

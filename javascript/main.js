@@ -1,6 +1,6 @@
 import {map} from "./modules/engine.mjs";
-import {colors, init as initUI,
-  update as updateUI, settings} from "./modules/ui.mjs";
+import {colors, init as initUI, draw as drawUI,
+  update as updateUI, canvas, cell} from "./modules/ui.mjs";
 import {vec2} from "./modules/vectors.mjs";
 
 function init() {
@@ -20,8 +20,8 @@ function init() {
 
 function resize() {
   const rect = $("#frame")[0].getBoundingClientRect();
-  settings.canvas.top = rect.top;
-  settings.canvas.left = rect.left;
+  canvas.top = rect.top;
+  canvas.left = rect.left;
 }
 
 function update() { // Update canvas size using grid data
@@ -47,16 +47,16 @@ function update() { // Update canvas size using grid data
 
   // We want always-square cells, so resize the canvas accordingly
   const ratio = x / y;
-  settings.canvas.width = canvas[0].width = Math.round(
+  canvas.width = canvas[0].width = Math.round(
     canvas[0].offsetWidth * window.devicePixelRatio);
-  settings.canvas.height = canvas[0].height = Math.round(
+  canvas.height = canvas[0].height = Math.round(
     canvas[0].offsetWidth * ratio * window.devicePixelRatio);
 
-  settings.cell.size = canvas[0].width / y;
+  cell.size = canvas[0].width / y;
 
-  settings.cell.focus = undefined;
-  settings.cell.hover = undefined;
-  settings.cell.target = undefined;
+  cell.focus = undefined;
+  cell.hover = undefined;
+  cell.target = undefined;
 
   // Reset data array
   map.data.actions = Array(x).fill().map(() => Array(y)
@@ -64,6 +64,7 @@ function update() { // Update canvas size using grid data
   map.data.states = Array(x).fill().map(() => Array(y).fill(0));
 
   updateUI();
+  drawUI();
 }
 
 $(document).ready(init);

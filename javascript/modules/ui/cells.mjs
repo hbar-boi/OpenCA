@@ -1,51 +1,36 @@
 import {vec2} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {notifyChange} from "../renderer.mjs";
-import {draw, settings} from "../ui.mjs";
+import {notifyIfValid} from "../renderer.mjs";
+import {draw, cell, canvas} from "../ui.mjs";
 import {fillActionList} from "./actions.mjs";
 
 // =============== UI STUFF FOR CELL INTERACTIONS ===================
 
-function getMode() { // This is no good
-  return $("#main-menu").is(":visible");
-}
-
-function setActive(data) {
-  if(getMode()) {
-    notifyChange(settings.cell.focus);
-    settings.cell.focus = data;
-  } else {
-    notifyChange(settings.cell.target);
-    settings.cell.target = data;
-  }
-}
-
-function getActive() {
-  return getMode() ? settings.cell.focus : settings.cell.target;
+export function setUICell(selector, value) {
+  notifyIfValid(cell[selector]);
+  cell[selector] = value;
 }
 
 export function click(e) {
-  const cell = eventCell(e);
-
-  if(cell.equals(getActive())) setActive(undefined);
-  else setActive(cell);
+  const current = eventCell(e);
+  const active = cell[cell.ACTIVE];
+  
+  if(current.equals(active)) setUICell(cell.ACTIVE, undefined);
+  else setUICell(cell.ACTIVE, current);
 
   update();
+  draw();
 }
 
 export function hover(e) { // Cell with cursor on changes color
-  const cell = eventCell(e);
-  const hover = settings.cell.hover;
-  notifyChange(hover);
+  const current = eventCell(e);
+
   switch(e.type) {
     case "mousemove":
-      if(!cell.equals(hover)) {
-        settings.cell.hover = cell;
-        return;
-      }
+      if(!current.equals(hover)) setUICell(cell.HOVER, current);
       break;
     case "mouseout":
-      settings.cell.hover = undefined; // Reset object
+      setUICell(cell.HOVER, undefined); // Reset object
       break;
   }
 
@@ -54,51 +39,52 @@ export function hover(e) { // Cell with cursor on changes color
 
 function eventCell(e) {
   const rel = new vec2( // Translate to top-left of canvas
-    e.pageX - settings.canvas.left,
-    e.pageY - settings.canvas.top);
+    e.pageX - canvas.left,
+    e.pageY - canvas.top);
 
   return new vec2( // Just divide and clamp to get index. Easy as that.
     Math.min(map.size.x - 1, Math.max(
-      0, Math.floor(rel.y / settings.cell.size))),
+      0, Math.floor(rel.y / cell.size))),
     Math.min(map.size.y - 1, Math.max(
-      0, Math.floor(rel.x / settings.cell.size))));
+      0, Math.floor(rel.x / cell.size))));
 }
 
 export function move(e) {
-  let active = getActive();
-  if(active == undefined) return;
+  const active = cell[cell.ACTIVE];
+  if(!active) return;
 
-  active = new vec2(active);
+  const current = new vec2(active);
   const up = new vec2(1, 0);
   const right = new vec2(0, 1);
 
   switch(e.which) {
     case 37:
-      if(active.y != 0) active.sub(right);
+      if(active.y != 0) current.sub(right);
       break;
     case 38:
-      if(active.x != 0) active.sub(up);
+      if(active.x != 0) current.sub(up);
       break;
     case 39:
-      if(active.y != map.size.y - 1) active.add(right);
+      if(active.y != map.size.y - 1) current.add(right);
       break;
     case 40:
-      if(active.x != map.size.x - 1) active.add(up);
+      if(active.x != map.size.x - 1) current.add(up);
       break;
   }
 
-  if(!active.equals(getActive())) {
+  if(!current.equals(active)) {
     e.preventDefault();
-    setActive(active);
+    setUICell(cell.ACTIVE, current);
+
     update();
+    draw();
   }
 }
 
-export function update(doDraw = true) {
-  const mode = getMode();
-  const active = getActive();
-
-  if(active == undefined) {
+export function update() {
+  const active = cell[cell.ACTIVE];
+  const mode = (active == cell.focus);
+  if(!active) {
     if(mode) { // If we are in focus mode do UI stuff for focus mode
       $("#cell-actions").html("");
       $("#current-cell").html("Select cell");
@@ -114,6 +100,4 @@ export function update(doDraw = true) {
     } else $("#target-cell").html(
       "Target is (" + active.x + ", " + active.y + ")");
   }
-
-  if(doDraw) draw();
 }
