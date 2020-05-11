@@ -14,9 +14,11 @@ export function setUICell(selector, value) {
 export function click(e) {
   const current = eventCell(e);
   const active = cell[cell.ACTIVE];
-  
-  if(current.equals(active)) setUICell(cell.ACTIVE, undefined);
-  else setUICell(cell.ACTIVE, current);
+
+  if(current.equals(active))
+    setUICell(cell.ACTIVE, undefined);
+  else
+    setUICell(cell.ACTIVE, current);
 
   update();
   draw();
@@ -43,32 +45,32 @@ function eventCell(e) {
     e.pageY - canvas.top);
 
   return new vec2( // Just divide and clamp to get index. Easy as that.
-    Math.min(map.size.x - 1, Math.max(
-      0, Math.floor(rel.y / cell.size))),
-    Math.min(map.size.y - 1, Math.max(
-      0, Math.floor(rel.x / cell.size))));
+    Math.min(map.size[0] - 1, Math.max(
+      0, Math.floor(rel[1] / cell.size))),
+    Math.min(map.size[1] - 1, Math.max(
+      0, Math.floor(rel[0] / cell.size))));
 }
 
 export function move(e) {
   const active = cell[cell.ACTIVE];
   if(!active) return;
 
-  const current = new vec2(active);
+  const current = active.clone();
   const up = new vec2(1, 0);
   const right = new vec2(0, 1);
 
   switch(e.which) {
     case 37:
-      if(active.y != 0) current.sub(right);
+      if(active[1] != 0) current.sub(right);
       break;
     case 38:
-      if(active.x != 0) current.sub(up);
+      if(active[0] != 0) current.sub(up);
       break;
     case 39:
-      if(active.y != map.size.y - 1) current.add(right);
+      if(active[1] != map.size[1] - 1) current.add(right);
       break;
     case 40:
-      if(active.x != map.size.x - 1) current.add(up);
+      if(active[0] != map.size[0] - 1) current.add(up);
       break;
   }
 
@@ -93,11 +95,11 @@ export function update() {
   } else {
     if(mode) { // Update cell actions 'n shit
       $("#current-cell").html(
-        "Active cell: (" + active.x + ", " + active.y + ")");
+        "Active cell: (" + active[0] + ", " + active[1] + ")");
       $("#cell-menu").show();
 
       fillActionList();
     } else $("#target-cell").html(
-      "Target is (" + active.x + ", " + active.y + ")");
+      "Target is (" + active[0] + ", " + active[1] + ")");
   }
 }

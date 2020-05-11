@@ -1,6 +1,6 @@
 import {vec2, vec3} from "../vectors.mjs";
 import {map} from "../engine.mjs";
-import {notify} from "../renderer.mjs";
+import {notifyState, notify} from "../renderer.mjs";
 import {colors, draw, cell} from "../ui.mjs";
 
 // ================= UI STUFF FOR WORKING ON STATES =====================
@@ -14,8 +14,8 @@ export function save(id = undefined) { // Create new state or save edits
   };
 
   // State should have an unique name and color
-  if(name == "" || map.states.some((e, i) => (
-    new vec3(e.color).equals(state.color) && i != id))) return;
+  if(name == "" || map.states.some(
+    (item, i) => (item.color.equals(state.color) && i != id))) return;
 
   // Create new state or update old one
   if(!id) {
@@ -23,7 +23,7 @@ export function save(id = undefined) { // Create new state or save edits
     id = map.states.length - 1;
   } else map.states[id] = state;
 
-  notify(getCellsByStateId(id));
+  notifyState(id);
   // Rebuild list
   update();
   draw();
@@ -31,7 +31,7 @@ export function save(id = undefined) { // Create new state or save edits
 
 export function remove(id) { // Rip
   // Cells with this id have to be reset...
-  notify(getCellsByStateId(id));
+  notifyState(id);
 
   map.states.splice(id, 1);
   if(map.states.length == 0) {
@@ -59,25 +59,13 @@ export function edit(e) { // Change UI to allow editing of state params
 
 export function set(e) {
   const state = e.target.getAttribute("data");
-  map.data.states[cell.focus.x][cell.focus.y] = state;
-  notify(cell.focus);
-}
-
-function getCellsByStateId(id) {
-  const cells = [];
-  map.data.states.forEach((row, i) => {
-    row.reduce((cells, item, j) => {
-      if(item == id) cells.push([i, j]);
-      return cells;
-    }, cells);
-  });
-
-  return cells.flat();
+  map.data.states[cell.focus[0]][cell.focus[1]] = state;
+  notify(cell.focus[0], cell.focus[1]);
 }
 
 export function getColorBox(color, inline = false) {
   const box = $("<span></span>").addClass("color-box")
-    .css("background-color", new vec3(color).toRGBA());
+    .css("background-color", color.toRGBA());
   if(inline) return box.addClass("color-box-inline")[0].outerHTML;
   return box;
 }
@@ -98,7 +86,7 @@ export function fillStateList(list, identifier) { // Fills a bootstrap dropdown
 
 export function update() {
   $("#state-name").val("");
-  $("#state-color").colorpicker("setValue", "rgb(255, 255, 255)");
+  $("#state-color").colorpicker("setValue", colors.DEFAULT_COLOR.toRGBA());
 
   $("#state-edit, #state-remove").hide();
   $("#state-add").show();

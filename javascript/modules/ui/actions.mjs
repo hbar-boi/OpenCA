@@ -82,7 +82,7 @@ export function save() {
   }
 
   const current = cell.focus;
-  map.data.actions[current.x][current.y].push(entry);
+  map.data.actions[current[0]][current[1]].push(entry);
 
   $("#main-menu").show();
   $("#action-menu").hide();
@@ -100,7 +100,7 @@ export function remove(e) {
   const id = e.target.parentElement.getAttribute("data");
   const focus = cell.focus;
 
-  map.data.actions[focus.x][focus.y].splice(id, 1);
+  map.data.actions[focus[0]][focus[1]].splice(id, 1);
 
   update();
   draw();
@@ -109,11 +109,11 @@ export function remove(e) {
 export function share(e) {
   const id = e.target.parentElement.getAttribute("data");
   const current = cell.focus;
-  const action = map.data.actions[current.x][current.y][id];
+  const action = map.data.actions[current[0]][current[1]][id];
 
-  for(let i = 0; i < map.size.x; i++) {
-    for(let j = 0; j < map.size.y; j++) {
-      if(i == current.x && j == current.y) continue;
+  for(let i = 0; i < map.size[0]; i++) {
+    for(let j = 0; j < map.size[1]; j++) {
+      if(i == current[0] && j == current[1]) continue;
       map.data.actions[i][j].push(action);
     }
   }
@@ -121,7 +121,7 @@ export function share(e) {
 
 export function fillActionList() {
   const current = cell.focus;
-  const actions = map.data.actions[current.x][current.y];
+  const actions = map.data.actions[current[0]][current[1]];
 
   const list = $("#cell-actions").html("");
   const entry = $("<li></li>").addClass("list-group-item");
@@ -158,7 +158,7 @@ export function fillActionList() {
         break;
       case action.TARGET_ONE:
         const other = item.other;
-        content += "(" + other.x + ", " + other.y + ") is ";
+        content += "(" + other[0] + ", " + other[1] + ") is ";
         if(item.mode == action.MODE_NOT) content += "not ";
         content += getColorBox(map.states[item.test].color, true) +
           " make this " + getColorBox(map.states[item.new].color, true);
