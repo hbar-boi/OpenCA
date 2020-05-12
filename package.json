@@ -1,0 +1,12 @@
+{
+  "name": "OpenCA",
+  "version": "1.0.0",
+  "description": "2D cellular automata simulator",
+  "scripts": {
+    "start": "node start.js"
+  },
+  "dependencies": {
+    "bootstrap-colorpicker": "^3.2.0",
+    "express": "^4.17.1"
+  }
+}
