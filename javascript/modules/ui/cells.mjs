@@ -56,21 +56,19 @@ export function move(e) {
   if(!active) return;
 
   const current = active.clone();
-  const up = new vec2(1, 0);
-  const right = new vec2(0, 1);
 
   switch(e.which) {
     case 37:
-      if(active[1] != 0) current.sub(right);
+      if(active[1] != 0) current.sub(0, 1);
       break;
     case 38:
-      if(active[0] != 0) current.sub(up);
+      if(active[0] != 0) current.sub(1, 0);
       break;
     case 39:
-      if(active[1] != map.size[1] - 1) current.add(right);
+      if(active[1] != map.size[1] - 1) current.add(0, 1);
       break;
     case 40:
-      if(active[0] != map.size[0] - 1) current.add(up);
+      if(active[0] != map.size[0] - 1) current.add(1, 0);
       break;
   }
 

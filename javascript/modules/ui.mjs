@@ -11,7 +11,7 @@ import * as statesUI from "./ui/states.mjs";
 
 // Define all colors we'll be using
 // FEAR NOT: even if one of these colors is chosen to represent a state, nothing
-// bad happens. The only thing is that it will be impossible to tell them apart.
+// bad happens. The only problem is that it will be impossible to tell them apart.
 export const colors = {
   "HOVER_COLOR": new vec3(195, 235, 239),
   "FOCUS_COLOR": new vec3(125, 153, 237),

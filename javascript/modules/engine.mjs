@@ -1,12 +1,13 @@
 import {draw} from "./ui.mjs";
 import {notifyAll, notify} from "./renderer.mjs";
 import {setStatus} from "./ui/engine.mjs";
+import {vec2} from "./vectors.mjs";
 
 // ================= DISCLAIMER =====================
 // This guy gotta run FAST, headaches due to unreadable
 // code might be experienced here.
 
-// Big ass object to store our CA data
+// Big ass object to store our CA data in
 export const map = {
   "size": undefined,
   "states": [],
@@ -38,6 +39,9 @@ export const action = {
 }
 
 export function start(target = undefined, sleep = 0) {
+  meta.neighborStart = new vec2(0, 0);
+  meta.neighborStop = new vec2(0, 0);
+
   meta.sleep = sleep;
   meta.target = target;
   // Save a copy of the starting states for reset.
@@ -92,7 +96,7 @@ export function reset() {
 // copy. At the end we just overwrite the working one on the old data.
 function advance() {
   const start = new Date().getTime();
-  // This will be our working copy. We could just as well pass the states only.
+  // This will be our working copy.
   meta.current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
   for(let i = 0; i < map.size[0]; i++)
     for(let j = 0; j < map.size[1]; j++)
@@ -107,7 +111,6 @@ function advance() {
 }
 
 function evalCellActions(x, y) {
-  // Actions are actions: don't care if we get them from the original data.
   const actions = map.data.actions[x][y];
   for(let k = 0; k < actions.length; k++) {
     switch(actions[k].target) {
@@ -133,26 +136,19 @@ function evalOne(x, y, act) {
 }
 
 function evalNeighborhood(x, y, act) {
-  // Vectors make the GC go nuts, let's not use 'em here...
-
   // Calculate the boundaries of this cell's neighborhood
   // If they exceed our grid's limits cap them.
 
   // This is not going to stay here forever
-  let xStart = x - act.distance;
-  let yStart = y - act.distance;
-  xStart = (xStart >= 0) ? xStart : 0;
-  yStart = (yStart >= 0) ? yStart : 0;
-
-  let xEnd = x + act.distance;
-  let yEnd = y + act.distance;
-  xEnd = (xEnd < map.size[0]) ? xEnd : map.size[0] - 1;
-  yEnd = (yEnd < map.size[1]) ? yEnd : map.size[1] - 1;
+  const start = meta.neighborStart.set(x - act.distance, y - act.distance)
+    .clampFloor(0, 0);
+  const stop = meta.neighborStop.set(x + act.distance, y + act.distance)
+    .clampCeil(map.size[0] - 1, map.size[1] - 1);
 
   // Check neighboirng cells and increase count when finding a matching one
   let count = 0;
-  for(let i = xStart; i <= xEnd ; i++) {
-    for(let j = yStart; j <= yEnd; j++) {
+  for(let i = start[0]; i <= stop[0]; i++) {
+    for(let j = start[1]; j <= stop[1]; j++) {
       if(x == i && y == j)
         continue;
       if(map.data.states[i][j] == act.test)
