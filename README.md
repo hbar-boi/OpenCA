@@ -5,8 +5,8 @@ There is no theoretical limit to the size of the model it can simulate, and it c
 
 ## Setup
 
-There are no dependencies, just clone and open it in your favorite web browser.
-Alternatively you can try it [here](https://hbar-boi.github.io/OpenCA/).
+You can run OpenCA by starting a node instance, just clone the repository and move into the home folder.
+Then, run `node install`. When done, run `node start` and navigate to http://localhost:3000.
 
 ## Usage
 
