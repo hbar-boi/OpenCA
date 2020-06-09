@@ -84,7 +84,16 @@
             </div>
             <div class="row mt-2 mb-2">
               <div class="col-sm pr-1 d-flex justify-content-center">
-                TODO
+                <button type="button"
+                  class="btn btn-block btn-primary dropdown-toggle" data-toggle="dropdown">
+                  Boundary
+                </button>
+                <div class="dropdown-menu" id="boundary-list">
+                  <button data="0" class="dropdown-item">Rectangle</button>
+                  <button data="1" class="dropdown-item">Vertical cylinder</button>
+                  <button data="2" class="dropdown-item">Horizontal cylinder</button>
+                  <button data="3" class="dropdown-item">Torus</button>
+                </div>
               </div>
               <div class="col-sm pl-1">
                 <button type="button" class="btn btn-primary btn-block" id="update-grid">Update</button>
@@ -152,6 +161,25 @@
               <div class="row">
                 <div class="col-sm">
                   <ul class="list-group list-group-flush" id="cell-actions"></ul>
+                </div>
+              </div>
+            </div>
+            <div class="border-top my-3"></div>
+            <p class="h4 d-inline">Outside world</p>
+            <div class="row mb-2 mt-2">
+              <div class="col-sm-3">
+                <a class="d-none" id="io-export-anchor"></a>
+                <button type="button" class="btn btn-primary" id="io-export">Export</button>
+              </div>
+              <div class="col-sm-9 pl-0">
+                <div class="input-group">
+                  <div class="custom-file">
+                    <input type="file" class="custom-file-input" id="io-import-file">
+                    <label class="custom-file-label" for="io-import-file">Choose file</label>
+                  </div>
+                  <div class="input-group-append">
+                    <button class="btn btn-primary" id="io-import" type="button">Import</button>
+                  </div>
                 </div>
               </div>
             </div>

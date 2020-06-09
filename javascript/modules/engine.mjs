@@ -11,6 +11,7 @@ import {vec2} from "./vectors.mjs";
 export const map = {
   "size": undefined,
   "states": [],
+  "boundary": 0,
   "data": {
     "states": undefined,
     "actions": undefined

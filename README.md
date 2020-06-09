@@ -7,6 +7,7 @@ There is no theoretical limit to the size of the model it can simulate, and it c
 
 There are no dependencies, just clone and open it in your favorite web browser.
 Alternatively you can try it [here](https://hbar-boi.github.io/OpenCA/).
+If you'd rather run it in a node server check out the other branch!
 
 ## Usage
 

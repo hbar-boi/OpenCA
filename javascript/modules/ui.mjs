@@ -7,6 +7,8 @@ import * as cellsUI from "./ui/cells.mjs";
 import * as actionsUI from "./ui/actions.mjs";
 import * as statesUI from "./ui/states.mjs";
 
+import * as io from "./io.mjs";
+
 // Handle all UI stuff
 
 // Define all colors we'll be using
@@ -88,6 +90,9 @@ export function init() {
   $("#cell-actions").on("click", ".action-delete", (e) => actionsUI.remove(e));
   $("#cell-actions").on("click", ".action-share", (e) => actionsUI.share(e));
   $("#target-list .dropdown-item").click((e) => actionsUI.setActionTarget(e));
+
+  $("#io-export").click(() => io.exportData());
+  $("#io-import").click(() => io.importData());
 
   // Keyboard
   $(document).keydown((e) => cellsUI.move(e));
