@@ -40,16 +40,16 @@ export function vec2(x, y) {
     return new vec2(this[0], this[1]);
   }
 
-  this.clampFloor = function(xMin, yMin) {
-    this[0] = (this[0] >= xMin) ? this[0] : xMin;
-    this[1] = (this[1] >= yMin) ? this[1] : yMin;
+  this.clampCeil = function(xMax, yMax) {
+    this[0] = Math.min(xMax, this[0]);
+    this[1] = Math.min(yMax, this[1]);
 
     return this;
   }
 
-  this.clampCeil = function(xMax, yMax) {
-    this[0] = (this[0] >= xMax) ? xMax : this[0];
-    this[1] = (this[1] >= yMax) ? yMax : this[1];
+  this.clampFloor = function(xMin, yMin) {
+    this[0] = Math.max(xMin, this[0]);
+    this[1] = Math.max(yMin, this[1]);
 
     return this;
   }

@@ -1,7 +1,9 @@
 import {draw} from "./ui.mjs";
-import {notifyAll, notify} from "./renderer.mjs";
+import {notifyAll, notify, cancelNotify} from "./renderer.mjs";
 import {setStatus} from "./ui/engine.mjs";
 import {vec2} from "./vectors.mjs";
+
+import {boundaries} from "./engine/boundaries.mjs"
 
 // ================= DISCLAIMER =====================
 // This guy gotta run FAST, headaches due to unreadable
@@ -18,14 +20,20 @@ export const map = {
   }
 };
 
-const meta = {
+export const meta = {
   "initial": undefined,
   "interval": undefined,
   "generation": 0,
 
   "sleep": 0,
   "target": undefined,
-  "current": undefined
+  "current": undefined,
+
+  "start": new vec2(0, 0),
+  "stop": new vec2(0, 0),
+  "range": undefined,
+
+  "boundary": undefined,
 }
 
 // Enum for action configuration
@@ -40,31 +48,39 @@ export const action = {
 }
 
 export function start(target = undefined, sleep = 0) {
-  meta.neighborStart = new vec2(0, 0);
-  meta.neighborStop = new vec2(0, 0);
-
   meta.sleep = sleep;
   meta.target = target;
+
+  meta.range = new vec2(map.size[0], map.size[1]);
+
   // Save a copy of the starting states for reset.
   meta.initial = JSON.parse(JSON.stringify(map.data.states));
+
+  meta.boundary = boundaries[map.boundary];
+
   meta.interval = setInterval(() => step(), meta.sleep);
 }
 
 // Step one generation
 export function step() {
-  const delta = advance();
-  meta.generation++;
-
   if(meta.target != undefined && meta.generation >= meta.target) {
     // Done with this simulation. Stop everything.
     clearInterval(meta.interval);
 
-    setStatus("Done. ", meta.generation);
-    draw();
-    return;
-  } else setStatus("Running. Delta: " + delta + " (ms), ", meta.generation);
+    cancelNotify();
+    notifyAll();
 
-  if(meta.sleep > 0) draw(); // No need to draw if immediately overwritten...
+    draw();
+
+    setStatus("Done. ", meta.generation);
+    return;
+  }
+
+  const evalTime = evalActions();
+  meta.generation++;
+  // No need to draw if immediately overwritten...
+  if(meta.sleep > 0) draw();
+  setStatus("Running. Delta: " + evalTime + " ms, ", meta.generation);
 }
 
 // Stop engine
@@ -95,34 +111,29 @@ export function reset() {
 // a "working" copy of our cell data and change THAT one. All comparisons will
 // be made on the original one (map.data) while the state changes happen on the
 // copy. At the end we just overwrite the working one on the old data.
-function advance() {
+function evalActions() {
   const start = new Date().getTime();
   // This will be our working copy.
   meta.current = JSON.parse(JSON.stringify(map.data.states)); // Make a deep copy
+  // Iterate over the cells and evaluate actions
   for(let i = 0; i < map.size[0]; i++)
-    for(let j = 0; j < map.size[1]; j++)
-      // Just iterate over all cells and evaluate one by one.
-      evalCellActions(i, j);
+    for(let j = 0; j < map.size[1]; j++) {
+      // Iterate over each action for this cell
+      const actions = map.data.actions[i][j];
+
+      for(let k = 0; k < actions.length; k++) {
+        if(actions[k].target == action.TARGET_NEIGHBOR)
+          evalNeighborhood(i, j, actions[k]);
+        else
+          evalOne(i, j, actions[k]);
+      }
+    }
 
   // All is done. Just make the new states drawable and move on.
   map.data.states = meta.current;
   const end = new Date().getTime();
   // Return time elapsed while evaluating this generaiton.
   return (end - start);
-}
-
-function evalCellActions(x, y) {
-  const actions = map.data.actions[x][y];
-  for(let k = 0; k < actions.length; k++) {
-    switch(actions[k].target) {
-      case action.TARGET_NEIGHBOR:
-        evalNeighborhood(x, y, actions[k]);
-        break;
-      case action.TARGET_ONE:
-        evalOne(x, y, actions[k]);
-        break;
-    }
-  }
 }
 
 function evalOne(x, y, act) {
@@ -137,22 +148,22 @@ function evalOne(x, y, act) {
 }
 
 function evalNeighborhood(x, y, act) {
-  // Calculate the boundaries of this cell's neighborhood
-  // If they exceed our grid's limits cap them.
+  meta.start.set(x - act.distance, y - act.distance);
+  meta.stop.set(x + act.distance, y + act.distance);
 
-  // This is not going to stay here forever
-  const start = meta.neighborStart.set(x - act.distance, y - act.distance)
-    .clampFloor(0, 0);
-  const stop = meta.neighborStop.set(x + act.distance, y + act.distance)
-    .clampCeil(map.size[0] - 1, map.size[1] - 1);
+  meta.boundary();
 
-  // Check neighboirng cells and increase count when finding a matching one
+  const width = meta.range[0];
+  const height = meta.range[1];
+
   let count = 0;
-  for(let i = start[0]; i <= stop[0]; i++) {
-    for(let j = start[1]; j <= stop[1]; j++) {
+  for(let i = meta.start[0]; i <= meta.stop[0]; i++) {
+    for(let j = meta.start[1]; j <= meta.stop[1]; j++) {
       if(x == i && y == j)
         continue;
-      if(map.data.states[i][j] == act.test)
+
+      if(map.data.states[(map.size[0] + i) % map.size[0]]
+        [(map.size[1] + j) % map.size[1]] == act.test)
         count++;
     }
   }

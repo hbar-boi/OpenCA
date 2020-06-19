@@ -81,6 +81,9 @@ export function init() {
   $("#engine-start").click(() => engineUI.start());
   $("#engine-stop").click(() => engineUI.stop());
   $("#engine-reset").click(() => engineUI.reset());
+  $("#boundary-list button").click((e) => {
+    map.boundary = +$(e.target).attr("data");
+  });
 
   // Action
   $("#action-apply").click(() => actionsUI.save());

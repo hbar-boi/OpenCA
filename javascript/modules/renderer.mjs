@@ -58,3 +58,7 @@ export function notifyAll() {
 export function notify(x, y) {
   updated.push([x, y]);
 }
+
+export function cancelNotify() {
+  updated = [];
+}
